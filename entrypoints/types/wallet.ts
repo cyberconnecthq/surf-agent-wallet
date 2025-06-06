@@ -42,6 +42,20 @@ export const NETWORKS: Network[] = [
   //   blockExplorerUrl: "https://etherscan.io",
   // },
   {
+    chainId: 7560,
+    name: "Cyber Mainnet",
+    rpcUrl: "https://cyber.alt.technology",
+    currency: "ETH",
+    blockExplorerUrl: "https://cyberscan.co",
+  },
+  {
+    chainId: 111557560,
+    name: "Cyber Testnet",
+    rpcUrl: "https://cyber-testnet.alt.technology/",
+    currency: "ETH",
+    blockExplorerUrl: "https://testnet.cyberscan.co",
+  },
+  {
     chainId: 5,
     name: "Goerli Testnet",
     rpcUrl: "https://goerli.infura.io/v3/YOUR_PROJECT_ID",
@@ -55,11 +69,4 @@ export const NETWORKS: Network[] = [
   //   currency: "MATIC",
   //   blockExplorerUrl: "https://polygonscan.com",
   // },
-  {
-    chainId: 111557560,
-    name: "Cyber Testnet",
-    rpcUrl: "https://cyber-testnet.alt.technology/",
-    currency: "ETH",
-    blockExplorerUrl: "https://testnet.cyberscan.co",
-  },
 ];

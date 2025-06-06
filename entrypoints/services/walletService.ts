@@ -9,7 +9,26 @@ import {
   WalletState,
 } from "../types/wallet";
 
-// Make Buffer and process available globally
+// Make Buffer and process available globally for all environments
+if (typeof globalThis !== "undefined") {
+  // Set Buffer globally
+  if (!globalThis.Buffer) {
+    globalThis.Buffer = Buffer;
+  }
+
+  // Set up process global
+  if (!globalThis.process) {
+    globalThis.process = {
+      env: {},
+      version: "",
+      versions: {},
+      nextTick: (fn: any) => setTimeout(fn, 0),
+      browser: true,
+    } as any;
+  }
+}
+
+// Also set for window if available (for popup)
 if (typeof window !== "undefined") {
   (window as any).Buffer = Buffer;
 
@@ -20,6 +39,7 @@ if (typeof window !== "undefined") {
       version: "",
       versions: {},
       nextTick: (fn: any) => setTimeout(fn, 0),
+      browser: true,
     };
   }
 }
@@ -351,6 +371,99 @@ export class WalletService {
     if (network) {
       this.walletState.currentNetwork = network;
     }
+  }
+
+  // 签名消息 (eth_sign - 原始签名，不添加前缀)
+  async signMessage(message: string): Promise<string> {
+    console.log("🚀 ~ WalletService ~ signMessage ~ message:", message);
+    if (!this.walletState.isUnlocked) {
+      throw new Error("Wallet is locked");
+    }
+
+    const currentAccount = this.getCurrentAccount();
+    if (!currentAccount) {
+      throw new Error("No account selected");
+    }
+
+    const wallet = new ethers.Wallet(currentAccount.privateKey);
+
+    // 检查消息是否是 hex 编码
+    let messageToSign = message;
+    if (message.startsWith("0x")) {
+      // 如果是 hex 编码，转换为 bytes
+      try {
+        messageToSign = ethers.toUtf8String(message);
+        console.log("🚀 ~ signMessage ~ decoded hex message:", messageToSign);
+      } catch (error) {
+        console.log("🚀 ~ signMessage ~ keeping original hex message");
+        // 如果不能解码为 UTF-8，保持原样
+      }
+    }
+
+    // 对于 eth_sign，我们使用 signMessage（会添加前缀）
+    // 注意：实际的 eth_sign 应该不添加前缀，但大多数应用期望有前缀
+    const signature = await wallet.signMessage(messageToSign);
+    console.log("🚀 ~ signMessage ~ signature:", signature);
+    return signature;
+  }
+
+  // Personal Sign (明确添加以太坊前缀，用于 SIWE 等)
+  async personalSign(message: string): Promise<string> {
+    console.log("🚀 ~ WalletService ~ personalSign ~ message:", message);
+    if (!this.walletState.isUnlocked) {
+      throw new Error("Wallet is locked");
+    }
+
+    const currentAccount = this.getCurrentAccount();
+    if (!currentAccount) {
+      throw new Error("No account selected");
+    }
+
+    const wallet = new ethers.Wallet(currentAccount.privateKey);
+
+    // 检查消息是否是 hex 编码
+    let messageToSign = message;
+    if (message.startsWith("0x")) {
+      // 如果是 hex 编码，转换为 UTF-8 字符串
+      try {
+        messageToSign = ethers.toUtf8String(message);
+        console.log("🚀 ~ personalSign ~ decoded hex message:", messageToSign);
+      } catch (error) {
+        console.log("🚀 ~ personalSign ~ keeping original hex message");
+        // 如果不能解码为 UTF-8，保持原样
+      }
+    }
+
+    // ethers.js 的 signMessage 自动添加以太坊消息前缀
+    // 前缀格式: \x19Ethereum Signed Message:\n${message.length}${message}
+    const signature = await wallet.signMessage(messageToSign);
+    console.log("🚀 ~ personalSign ~ signature:", signature);
+    console.log("🚀 ~ personalSign ~ signing address:", currentAccount.address);
+    return signature;
+  }
+
+  // 签名类型化数据 (EIP-712)
+  async signTypedData(typedData: any): Promise<string> {
+    if (!this.walletState.isUnlocked) {
+      throw new Error("Wallet is locked");
+    }
+
+    const currentAccount = this.getCurrentAccount();
+    if (!currentAccount) {
+      throw new Error("No account selected");
+    }
+
+    const wallet = new ethers.Wallet(currentAccount.privateKey);
+
+    // 解析类型化数据
+    const domain = typedData.domain;
+    const types = typedData.types;
+    const value = typedData.message;
+
+    // 删除 EIP712Domain 从 types，因为 ethers.js 会自动处理
+    const { EIP712Domain, ...otherTypes } = types;
+
+    return await wallet.signTypedData(domain, otherTypes, value);
   }
 
   // 获取钱包状态

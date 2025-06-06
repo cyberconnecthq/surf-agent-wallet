@@ -15,6 +15,7 @@
     "postinstall": "wxt prepare"
   },
   "dependencies": {
+    "@webext-core/messaging": "^2.2.0",
     "bip39": "^3.1.0",
     "crypto-js": "^4.2.0",
     "ethers": "^6.8.1",

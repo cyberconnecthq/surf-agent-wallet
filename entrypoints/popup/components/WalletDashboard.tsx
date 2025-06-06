@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import {
+  FiChevronDown,
   FiCopy,
   FiDownload,
-  FiLock,
   FiRefreshCw,
   FiSend,
+  FiSettings,
 } from "react-icons/fi";
-import { WalletService } from "../../services/walletService";
+import { sendToBackground } from "../../../utils/messaging";
 import { Network, NETWORKS, WalletAccount } from "../../types/wallet";
+import "./WalletDashboard.css";
 
 interface WalletDashboardProps {
   onLock: () => void;
@@ -26,30 +28,40 @@ export const WalletDashboard: React.FC<WalletDashboardProps> = ({ onLock }) => {
   const [showNetworkSelector, setShowNetworkSelector] = useState(false);
   const [sendForm, setSendForm] = useState({ to: "", amount: "" });
 
-  const walletService = WalletService.getInstance();
-
   useEffect(() => {
     loadWalletData();
   }, []);
 
   const loadWalletData = async () => {
-    const account = walletService.getCurrentAccount();
-    if (account) {
-      setCurrentAccount(account);
-      await refreshBalance(account.address);
-    }
+    try {
+      // 从background获取当前账户
+      const account = await sendToBackground("GET_CURRENT_ACCOUNT", undefined);
 
-    const state = walletService.getWalletState();
-    setCurrentNetwork(state.currentNetwork);
+      if (account) {
+        setCurrentAccount(account);
+        await refreshBalance(account.address);
+      }
+
+      // 从background获取钱包状态
+      const state = await sendToBackground("GET_WALLET_STATE", undefined);
+
+      if (state && state.currentNetwork) {
+        setCurrentNetwork(state.currentNetwork);
+      }
+    } catch (error) {
+      console.error("❌ Popup: Failed to load wallet data:", error);
+    }
   };
 
   const refreshBalance = async (address: string) => {
     setIsLoading(true);
     try {
-      const newBalance = await walletService.getBalance(address);
+      // 通过background刷新余额
+      const newBalance = await sendToBackground("REFRESH_BALANCE", { address });
       setBalance(newBalance);
     } catch (error) {
-      console.error("Failed to fetch balance:", error);
+      console.error("❌ Popup: Failed to fetch balance:", error);
+      setBalance("0");
     } finally {
       setIsLoading(false);
     }
@@ -66,111 +78,77 @@ export const WalletDashboard: React.FC<WalletDashboardProps> = ({ onLock }) => {
   };
 
   const handleSend = async () => {
-    if (!sendForm.to || !sendForm.amount) {
+    if (!sendForm.to || !sendForm.amount || !currentAccount) {
       alert("Please fill in all fields");
       return;
     }
 
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      const hash = await walletService.sendTransaction(
-        sendForm.to,
-        sendForm.amount
-      );
-      alert(`Transaction sent! Hash: ${hash}`);
+      // 通过background发送交易
+      const txHash = await sendToBackground("SEND_TRANSACTION_FROM_POPUP", {
+        to: sendForm.to,
+        amount: sendForm.amount,
+      });
+
+      alert(`Transaction sent! Hash: ${txHash}`);
       setSendForm({ to: "", amount: "" });
-      setActiveTab("activity");
-      if (currentAccount) {
-        await refreshBalance(currentAccount.address);
-      }
+      setActiveTab("assets");
+
+      // 刷新余额
+      await refreshBalance(currentAccount.address);
     } catch (error) {
-      alert(`Transaction failed: ${error}`);
+      console.error("❌ Popup: Transaction failed:", error);
+      alert(`Transaction failed: ${(error as Error).message}`);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const switchNetwork = (network: Network) => {
-    walletService.switchNetwork(network.chainId);
-    setCurrentNetwork(network);
-    setShowNetworkSelector(false);
-    if (currentAccount) {
-      refreshBalance(currentAccount.address);
-    }
-  };
-
   if (!currentAccount) {
-    return <div>Loading...</div>;
+    return (
+      <div className="wallet-dashboard">
+        <div className="loading-screen">
+          <div className="loading-spinner">🔄</div>
+          <p>Loading account from background...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="wallet-dashboard">
-      <div className="floating-particles"></div>
-
-      <div className="send-tab">
-        <div className="send-form">
-          <div className="form-group">
-            <label>To Address</label>
-            <input
-              type="text"
-              value={sendForm.to}
-              onChange={(e) => setSendForm({ ...sendForm, to: e.target.value })}
-              placeholder="0x..."
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Amount ({currentNetwork.currency})</label>
-            <input
-              type="number"
-              step="0.001"
-              value={sendForm.amount}
-              onChange={(e) =>
-                setSendForm({ ...sendForm, amount: e.target.value })
-              }
-              placeholder="0.0"
-            />
-          </div>
-
-          <button
-            className="btn btn-primary"
-            onClick={handleSend}
-            disabled={isLoading || !sendForm.to || !sendForm.amount}
-          >
-            {isLoading ? "Sending..." : "🚀 Send Transaction"}
-          </button>
-        </div>
-      </div>
       {/* Header */}
       <div className="wallet-header">
-        <div className="network-selector">
-          <button
-            className="network-btn"
-            onClick={() => setShowNetworkSelector(!showNetworkSelector)}
-          >
-            {currentNetwork.name}
-            <span className="dropdown-arrow">▼</span>
-          </button>
-
+        <div
+          className="network-selector"
+          onClick={() => setShowNetworkSelector(!showNetworkSelector)}
+        >
+          <span className="network-name">{currentNetwork.name}</span>
+          <FiChevronDown />
           {showNetworkSelector && (
             <div className="network-dropdown">
               {NETWORKS.map((network) => (
-                <button
+                <div
                   key={network.chainId}
                   className={`network-option ${
-                    network.chainId === currentNetwork.chainId ? "active" : ""
+                    network.chainId === currentNetwork.chainId ? "selected" : ""
                   }`}
-                  onClick={() => switchNetwork(network)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentNetwork(network);
+                    setShowNetworkSelector(false);
+                  }}
                 >
                   {network.name}
-                </button>
+                </div>
               ))}
             </div>
           )}
         </div>
 
-        <button className="lock-btn" onClick={onLock}>
-          <FiLock />
+        <button className="settings-btn" onClick={onLock}>
+          <FiSettings />
         </button>
       </div>
 
@@ -225,7 +203,7 @@ export const WalletDashboard: React.FC<WalletDashboardProps> = ({ onLock }) => {
       </div>
 
       {/* Tabs */}
-      <div className="tab-navigation">
+      <div className="wallet-tabs">
         <button
           className={`tab ${activeTab === "assets" ? "active" : ""}`}
           onClick={() => setActiveTab("assets")}
@@ -258,11 +236,11 @@ export const WalletDashboard: React.FC<WalletDashboardProps> = ({ onLock }) => {
           <div className="assets-tab">
             <div className="asset-item">
               <div className="asset-info">
-                <div className="asset-symbol">{currentNetwork.currency}</div>
-                <div className="asset-name">{currentNetwork.name}</div>
-              </div>
-              <div className="asset-balance">
-                {parseFloat(balance).toFixed(4)}
+                <div className="asset-icon">Ξ</div>
+                <div className="asset-details">
+                  <div className="asset-name">{currentNetwork.currency}</div>
+                  <div className="asset-balance">{balance}</div>
+                </div>
               </div>
             </div>
           </div>
@@ -270,9 +248,7 @@ export const WalletDashboard: React.FC<WalletDashboardProps> = ({ onLock }) => {
 
         {activeTab === "activity" && (
           <div className="activity-tab">
-            <div className="no-activity">
-              <p>✨ No recent activity</p>
-            </div>
+            <p className="empty-state">No recent activity</p>
           </div>
         )}
 
@@ -280,36 +256,34 @@ export const WalletDashboard: React.FC<WalletDashboardProps> = ({ onLock }) => {
           <div className="send-tab">
             <div className="send-form">
               <div className="form-group">
-                <label>To Address</label>
+                <label>To:</label>
                 <input
                   type="text"
                   value={sendForm.to}
                   onChange={(e) =>
                     setSendForm({ ...sendForm, to: e.target.value })
                   }
-                  placeholder="0x..."
+                  placeholder="Recipient address"
                 />
               </div>
-
               <div className="form-group">
-                <label>Amount ({currentNetwork.currency})</label>
+                <label>Amount:</label>
                 <input
                   type="number"
-                  step="0.001"
                   value={sendForm.amount}
                   onChange={(e) =>
                     setSendForm({ ...sendForm, amount: e.target.value })
                   }
                   placeholder="0.0"
+                  step="0.001"
                 />
               </div>
-
               <button
-                className="btn btn-primary"
+                className="send-btn"
                 onClick={handleSend}
                 disabled={isLoading || !sendForm.to || !sendForm.amount}
               >
-                {isLoading ? "Sending..." : "🚀 Send Transaction"}
+                {isLoading ? "Sending..." : "Send"}
               </button>
             </div>
           </div>
@@ -317,45 +291,16 @@ export const WalletDashboard: React.FC<WalletDashboardProps> = ({ onLock }) => {
 
         {activeTab === "receive" && (
           <div className="receive-tab">
-            <div className="receive-form">
-              <div className="receive-header">
-                <h3>Receive {currentNetwork.currency}</h3>
-                <p>Send {currentNetwork.currency} to this address</p>
+            <div className="receive-info">
+              <div className="qr-placeholder">
+                <div className="qr-code">QR Code</div>
               </div>
-
-              <div className="address-display">
-                <div className="address-qr">
-                  <div className="qr-placeholder">
-                    📱
-                    <p>QR Code</p>
-                  </div>
+              <div className="receive-address">
+                <label>Your Address:</label>
+                <div className="address-display" onClick={copyAddress}>
+                  {currentAccount.address}
+                  <FiCopy className="copy-icon" />
                 </div>
-
-                <div className="address-text">
-                  <label>Your Address</label>
-                  <div className="address-container">
-                    <input
-                      type="text"
-                      value={currentAccount.address}
-                      readOnly
-                      className="address-input"
-                    />
-                    <button
-                      className="copy-btn"
-                      onClick={copyAddress}
-                      title="Copy Address"
-                    >
-                      <FiCopy />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="receive-warning">
-                <p>
-                  ⚠️ Only send {currentNetwork.currency} and{" "}
-                  {currentNetwork.name} compatible tokens to this address
-                </p>
               </div>
             </div>
           </div>
