@@ -72,6 +72,8 @@ async function handleWalletRequest(method: string, params: any[] = []) {
       return await getAccounts();
 
     case "eth_chainId":
+      const chainId = await getChainId();
+      console.log("🚀 ~ handleWalletRequest ~ chainId:", chainId);
       return await getChainId();
 
     case "net_version":
@@ -136,7 +138,11 @@ async function getAccounts() {
 
 async function getChainId() {
   const result = await sendToBackground("GET_CHAIN_ID", undefined);
-  console.log("🚀 ~ getChainId ~ result:", result);
+  console.log(
+    "🚀 ~ getChainId ~ result:",
+    `0x${(result as number).toString(16)}`
+  );
+
   return `0x${(result as number).toString(16)}`;
 }
 
@@ -169,19 +175,31 @@ async function signTypedData(address: string, typedData: any) {
 async function switchChain(chainParam: { chainId: string }) {
   console.log("🚀 ~ switchChain ~ chainParam:", chainParam);
   const chainId = parseInt(chainParam.chainId, 16);
-  await sendToBackground("SWITCH_CHAIN", { chainId });
 
-  // 触发链变更事件
-  window.postMessage(
-    {
-      type: "WALLET_EVENT",
-      event: "chainChanged",
-      data: chainParam.chainId,
-    },
-    "*"
-  );
+  const currentChainId = await getChainId();
 
-  return null;
+  if (currentChainId === chainParam.chainId) return null;
+
+  try {
+    // 等待后台确认切换完成
+    await sendToBackground("SWITCH_CHAIN", { chainId });
+
+    // 只有在后台确认成功后才触发事件
+    window.postMessage(
+      {
+        type: "WALLET_EVENT",
+        event: "chainChanged",
+        data: chainParam.chainId,
+      },
+      "*"
+    );
+
+    console.log("🚀 ~ switchChain ~ success ~ chainParam:", chainParam);
+    return null;
+  } catch (error) {
+    console.error("🚀 ~ switchChain ~ error:", error);
+    throw error;
+  }
 }
 
 async function addChain(chainParam: any) {

@@ -287,11 +287,21 @@ async function setupMessageHandlers() {
 
   // SWITCH_CHAIN
   onBackgroundMessage("SWITCH_CHAIN", async ({ data }) => {
-    console.log("🚀 ~ onBackgroundMessage ~ data:", data);
+    console.log("🚀 ~ onBackgroundMessage ~ SWITCH_CHAIN ~ data:", data);
     try {
+      // 执行链切换
       turnkeyService.switchNetwork(data.chainId);
+
+      // 验证切换是否成功
+      const currentState = turnkeyService.getWalletState();
+      if (currentState.currentNetwork.chainId !== data.chainId) {
+        throw new Error(`Failed to switch to chain ${data.chainId}`);
+      }
+
+      console.log("🚀 ~ SWITCH_CHAIN ~ success ~ chainId:", data.chainId);
       return null;
     } catch (error) {
+      console.error("🚀 ~ SWITCH_CHAIN ~ error:", error);
       throw new Error(`Failed to switch chain: ${(error as Error).message}`);
     }
   });

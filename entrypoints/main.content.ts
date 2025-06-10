@@ -186,6 +186,8 @@ function injectEthereumProvider() {
     if (event.data.type === "WALLET_EVENT") {
       const ethProvider = (window as any).ethereum;
       if (ethProvider && ethProvider.isMyWallet) {
+        console.log("🚀 ~ window.addEventListener ~ event:", event.data);
+
         ethProvider.dispatchEvent(
           new CustomEvent(event.data.event, {
             detail: event.data.data,
