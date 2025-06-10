@@ -1,3 +1,5 @@
+/** @format */
+
 export interface WalletAccount {
   address: string;
   privateKey: string;
@@ -34,13 +36,6 @@ export interface WalletState {
 }
 
 export const NETWORKS: Network[] = [
-  // {
-  //   chainId: 1,
-  //   name: "Ethereum Mainnet",
-  //   rpcUrl: "https://eth.llamarpc.com",
-  //   currency: "ETH",
-  //   blockExplorerUrl: "https://etherscan.io",
-  // },
   {
     chainId: 7560,
     name: "Cyber Mainnet",
@@ -56,17 +51,31 @@ export const NETWORKS: Network[] = [
     blockExplorerUrl: "https://testnet.cyberscan.co",
   },
   {
-    chainId: 5,
-    name: "Goerli Testnet",
-    rpcUrl: "https://goerli.infura.io/v3/YOUR_PROJECT_ID",
+    chainId: 1,
+    name: "Ethereum Mainnet",
+    rpcUrl: "https://eth.llamarpc.com",
     currency: "ETH",
-    blockExplorerUrl: "https://goerli.etherscan.io",
+    blockExplorerUrl: "https://etherscan.io",
+  },
+  {
+    chainId: 8453,
+    name: "Base Mainnet",
+    rpcUrl: "https://developer-access-mainnet.base.org",
+    currency: "ETH",
+    blockExplorerUrl: "https://basescan.org",
   },
   // {
-  //   chainId: 137,
-  //   name: "Polygon Mainnet",
-  //   rpcUrl: "https://polygon-rpc.com",
-  //   currency: "MATIC",
-  //   blockExplorerUrl: "https://polygonscan.com",
+  //   chainId: 5,
+  //   name: "Goerli Testnet",
+  //   rpcUrl: "https://goerli.infura.io/v3/YOUR_PROJECT_ID",
+  //   currency: "ETH",
+  //   blockExplorerUrl: "https://goerli.etherscan.io",
   // },
+  {
+    chainId: 137,
+    name: "Polygon Mainnet",
+    rpcUrl: "https://polygon-rpc.com",
+    currency: "MATIC",
+    blockExplorerUrl: "https://polygonscan.com",
+  },
 ];

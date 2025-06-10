@@ -4,18 +4,15 @@ import {
   FiCopy,
   FiDownload,
   FiRefreshCw,
-  FiSend,
-  FiSettings,
+  FiSend
 } from "react-icons/fi";
 import { sendToBackground } from "../../../utils/messaging";
 import { Network, NETWORKS, WalletAccount } from "../../types/wallet";
 import "./WalletDashboard.css";
 
-interface WalletDashboardProps {
-  onLock: () => void;
-}
 
-export const WalletDashboard: React.FC<WalletDashboardProps> = ({ onLock }) => {
+
+export const WalletDashboard: React.FC<{}> = ({ }) => {
   const [currentAccount, setCurrentAccount] = useState<WalletAccount | null>(
     null
   );
@@ -131,9 +128,8 @@ export const WalletDashboard: React.FC<WalletDashboardProps> = ({ onLock }) => {
               {NETWORKS.map((network) => (
                 <div
                   key={network.chainId}
-                  className={`network-option ${
-                    network.chainId === currentNetwork.chainId ? "selected" : ""
-                  }`}
+                  className={`network-option ${network.chainId === currentNetwork.chainId ? "selected" : ""
+                    }`}
                   onClick={(e) => {
                     e.stopPropagation();
                     setCurrentNetwork(network);
@@ -146,10 +142,6 @@ export const WalletDashboard: React.FC<WalletDashboardProps> = ({ onLock }) => {
             </div>
           )}
         </div>
-
-        <button className="settings-btn" onClick={onLock}>
-          <FiSettings />
-        </button>
       </div>
 
       {/* Account Info */}

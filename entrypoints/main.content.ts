@@ -1,3 +1,5 @@
+/** @format */
+
 export default defineContentScript({
   matches: ["<all_urls>"],
   world: "MAIN",

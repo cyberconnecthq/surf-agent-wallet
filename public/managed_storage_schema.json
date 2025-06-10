@@ -1,0 +1,21 @@
+{
+  "type": "object",
+  "properties": {
+    "USER_ACCESS_TOKEN": {
+      "type": "string",
+      "title": "User Access Token",
+      "description": "The user's access token for authenticating with the backend API.",
+      "pattern": "^[a-zA-Z0-9\\-_.]+$",
+      "minLength": 0,
+      "maxLength": 256
+    },
+    "SESSION_ID": {
+      "type": "string",
+      "title": "Session ID",
+      "description": "The identifier for the user's current session.",
+      "pattern": "^[a-zA-Z0-9\\-_]+$",
+      "minLength": 0,
+      "maxLength": 256
+    }
+  }
+}

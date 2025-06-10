@@ -78,17 +78,10 @@ function App() {
     }
   };
 
-  const handleLock = () => {
-    // 在无密码模式下，锁定实际上就是刷新应用
-    setAppState("loading");
-    setRetryCount(0); // 重置重试计数
-    // 重新初始化
-    setTimeout(() => {
-      initializeWallet();
-    }, 100);
-  };
+
 
   const renderContent = () => {
+    console.log("🚀 ~ renderContent ~ appState:", appState)
     switch (appState) {
       case "loading":
         return (
@@ -104,7 +97,7 @@ function App() {
         );
 
       case "ready":
-        return <WalletDashboard onLock={handleLock} />;
+        return <WalletDashboard />;
 
       default:
         return <div>Unknown state</div>;

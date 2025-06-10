@@ -1,9 +1,20 @@
+/** @format */
+
 import { sendToBackground } from "../utils/messaging";
 
 export default defineContentScript({
   matches: ["<all_urls>"],
   world: "ISOLATED",
   main() {
+    console.log("🔍 Extension ID:", browser.runtime.id);
+    console.log("🔍 Expected ID: feabcgcnjcdoenfijckdpclefalmakna");
+    console.log(
+      "🔍 ID Match:",
+      browser.runtime.id === "feabcgcnjcdoenfijckdpclefalmakna"
+    );
+
+    // pollingTokens(); // 移除这行，现在在background script中执行
+
     // 在 ISOLATED world 中处理与 background 的通信
     setupIsolatedWorldHandler();
   },
@@ -125,6 +136,7 @@ async function getAccounts() {
 
 async function getChainId() {
   const result = await sendToBackground("GET_CHAIN_ID", undefined);
+  console.log("🚀 ~ getChainId ~ result:", result);
   return `0x${(result as number).toString(16)}`;
 }
 
@@ -155,6 +167,7 @@ async function signTypedData(address: string, typedData: any) {
 }
 
 async function switchChain(chainParam: { chainId: string }) {
+  console.log("🚀 ~ switchChain ~ chainParam:", chainParam);
   const chainId = parseInt(chainParam.chainId, 16);
   await sendToBackground("SWITCH_CHAIN", { chainId });
 

@@ -1,8 +1,8 @@
 {
-  "name": "wallet-extension-demo",
-  "description": "A MetaMask-like wallet browser extension",
+  "name": "surf-wallet",
+  "description": "A Surf wallet browser extension",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "wxt",
@@ -21,7 +21,12 @@
     "ethers": "^6.8.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-icons": "^4.12.0"
+    "react-icons": "^4.12.0",
+    "@turnkey/api-key-stamper": "0.4.6",
+    "@turnkey/http": "3.4.1",
+    "@turnkey/iframe-stamper": "2.5.0",
+    "@turnkey/sdk-browser": "5.2.0",
+    "@turnkey/ethers": "1.1.28"
   },
   "devDependencies": {
     "@types/crypto-js": "^4.2.1",
