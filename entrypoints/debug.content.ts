@@ -355,57 +355,43 @@ function createDebugPanel() {
 }
 
 function setupDebugListener() {
-  console.log("🔍 Debug panel: Setting up message listener");
+  //   console.log("🔍 Debug panel: Setting up message listener");
 
   // 监听钱包请求
   window.addEventListener("message", (event) => {
-    console.log("🔍 Debug panel: Received message", event.data);
+    // console.log("🔍 Debug panel: Received message", event.data);
 
     if (event.source !== window) {
-      console.log("🔍 Debug panel: Message source is not window, ignoring");
+      //   console.log("🔍 Debug panel: Message source is not window, ignoring");
       return;
     }
 
     if (event.data.type === "WALLET_REQUEST_TO_BACKGROUND") {
-      console.log("🔍 Debug panel: Got wallet request", event.data);
+      //   console.log("🔍 Debug panel: Got wallet request", event.data);
       const { method, params, messageId } = event.data;
       if (method && params && messageId) {
         const idStr = String(messageId); // 转换为字符串
-        console.log("🔍 Debug panel: Adding call to panel", method, idStr);
+        // console.log("🔍 Debug panel: Adding call to panel", method, idStr);
         debugPanel?.addCall(method, params, idStr);
       } else {
-        console.log("🔍 Debug panel: Missing required fields", {
-          method,
-          params,
-          messageId,
-        });
+        // console.log("🔍 Debug panel: Missing required fields", {
+        //   method,
+        //   params,
+        //   messageId,
+        // });
       }
     }
 
     if (event.data.type === "WALLET_RESPONSE_FROM_BACKGROUND") {
-      console.log("🔍 Debug panel: Got wallet response", event.data);
+      //   console.log("🔍 Debug panel: Got wallet response", event.data);
       const { messageId, result, error } = event.data;
       if (messageId) {
         const idStr = String(messageId); // 转换为字符串
-        console.log("🔍 Debug panel: Updating call in panel", idStr);
+        // console.log("🔍 Debug panel: Updating call in panel", idStr);
         debugPanel?.updateCall(idStr, result, error);
       } else {
-        console.log("🔍 Debug panel: Missing messageId", { messageId });
+        // console.log("🔍 Debug panel: Missing messageId", { messageId });
       }
     }
   });
-
-  // 测试消息发送
-  setTimeout(() => {
-    console.log("🔍 Debug panel: Sending test message");
-    window.postMessage(
-      {
-        type: "WALLET_REQUEST_TO_BACKGROUND",
-        method: "test_method",
-        params: ["test_param"],
-        messageId: "test_" + Date.now(),
-      },
-      "*"
-    );
-  }, 2000);
 }
