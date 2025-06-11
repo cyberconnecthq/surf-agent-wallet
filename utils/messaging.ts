@@ -4,6 +4,7 @@ import { defineExtensionMessaging } from "@webext-core/messaging";
 
 // 定义扩展消息协议接口（isolated world <-> background）
 export interface WalletProtocolMap {
+  HEALTH_CHECK(): { status: string; timestamp: number };
   GET_ACCOUNTS(): string[];
   GET_CHAIN_ID(): number;
   GET_BALANCE(data: { address: string; blockTag?: string }): string;

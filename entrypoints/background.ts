@@ -2,6 +2,10 @@
 
 import { Buffer } from "buffer";
 import { onBackgroundMessage } from "../utils/messaging";
+import { TurnkeyService } from "./services/TurnkeyService";
+import { NETWORKS } from "./types/wallet";
+
+const turnkeyService = TurnkeyService.getInstance();
 
 // Ensure Buffer is available globally in background script
 if (typeof globalThis !== "undefined" && !globalThis.Buffer) {
@@ -18,13 +22,21 @@ if (typeof globalThis !== "undefined" && !globalThis.Buffer) {
 }
 
 export default defineBackground(() => {
-  console.log("🔧 Background script loaded");
+  console.log("🔧 Background script loaded at:", new Date().toISOString());
 
-  // 立即初始化钱包服务
-  initializeWalletService();
+  // // 立即初始化钱包服务
+  // initializeWalletService();
 
-  // TODO: enable this
-  // pollingTokens();
+  // // TODO: enable this
+  // // pollingTokens();
+
+  // 立即设置消息处理器，确保第一时间可以响应请求
+  setupMessageHandlers().catch((error) => {
+    console.error(
+      "❌ Critical: Background message handlers setup failed:",
+      error
+    );
+  });
 
   // 扩展安装时自动生成钱包（备用）
   browser.runtime.onInstalled.addListener(async () => {
@@ -32,25 +44,22 @@ export default defineBackground(() => {
     await initializeWalletService();
   });
 
-  // 设置消息处理器
-  setupMessageHandlers();
+  // 扩展启动时也初始化（处理重新加载的情况）
+  browser.runtime.onStartup.addListener(async () => {
+    console.log("Extension startup, re-initializing...");
+    await initializeWalletService();
+  });
 });
 
 async function initializeWalletService() {
   try {
-    const { WalletService } = await import("./services/walletService");
-    const { TurnkeyService } = await import("./services/TurnkeyService");
-    const walletService = WalletService.getInstance();
     const turnkeyService = TurnkeyService.getInstance();
-
     console.log("🔧 Initializing wallet service...");
-
     // 首先尝试自动加载现有钱包
     // const user = await turnkeyService.whoami();
     const wallets = await turnkeyService.getWallets();
     console.log("🚀 ~ initializeWalletService ~ wallets:", wallets);
     // console.log("🔧 Auto load result:", user);
-
     // if (user) {
     //   console.log("✅ Existing wallet loaded successfully");
     //   // TODO: wallet state
@@ -62,12 +71,10 @@ async function initializeWalletService() {
     //   });
     //   return;
     // }
-
     // 如果没有现有钱包，检查是否需要创建新钱包
     // const hasWallet = await walletService.hasWallet();
     // const hasWallet = await turnkeyService.hasWallet();
     // console.log("🔧 Has wallet:", hasWallet);
-
     // if (!hasWallet) {
     //   console.log("🔧 No wallet found, creating new wallet...");
     //   const result = await walletService.createWalletAuto();
@@ -78,7 +85,6 @@ async function initializeWalletService() {
     // } else {
     //   console.log("✅ Wallet exists but needs to be unlocked");
     // }
-
     // 验证最终状态
     // const finalState = walletService.getWalletState();
     // console.log("🔧 Final wallet state:", {
@@ -92,27 +98,41 @@ async function initializeWalletService() {
 }
 
 async function setupMessageHandlers() {
-  const { TurnkeyService } = await import("./services/TurnkeyService");
+  console.log(
+    "🚀 ~ setupMessageHandlers ~ setupMessageHandlers:🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀��🚀🚀🚀🚀🚀🚀"
+  );
 
-  const turnkeyService = TurnkeyService.getInstance();
+  // 添加健康检查处理器
+  onBackgroundMessage("HEALTH_CHECK", async () => {
+    console.log("🏥 Health check received");
+    return { status: "ok", timestamp: Date.now() };
+  });
 
   // GET_ACCOUNTS
   onBackgroundMessage("GET_ACCOUNTS", async () => {
-    // const state = await turnkeyService.getWallets();
-    // if (!state?.evm && !state?.sol) {
-    //   return [];
-    // }
-    return ["0x810D0b362bD1492Ad6aFEB723Dc3D6D9F7e4DC51"];
+    try {
+      console.log("🚀 ~ onBackgroundMessage ~ GET_ACCOUNTS: START");
+      const accounts = ["0x810D0b362bD1492Ad6aFEB723Dc3D6D9F7e4DC51"];
+      console.log("🚀 ~ onBackgroundMessage ~ GET_ACCOUNTS: SUCCESS", accounts);
+      return accounts;
+    } catch (error) {
+      console.error("❌ GET_ACCOUNTS failed:", error);
+      return [];
+    }
   });
 
   // GET_CHAIN_ID
   onBackgroundMessage("GET_CHAIN_ID", async () => {
-    const state = turnkeyService.getWalletState();
-    console.log(
-      "🚀 ~ onBackgroundMessage ~ state.currentNetwork.chainId:",
-      state.currentNetwork.chainId
-    );
-    return state.currentNetwork.chainId;
+    try {
+      const state = turnkeyService.getWalletState();
+      console.log(
+        "🚀 ~ onBackgroundMessage ~ state.currentNetwork.chainId:",
+        state.currentNetwork.chainId
+      );
+      return state.currentNetwork.chainId;
+    } catch (error) {
+      return NETWORKS[0].chainId;
+    }
   });
 
   // GET_BALANCE

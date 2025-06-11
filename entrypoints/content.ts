@@ -5,6 +5,7 @@ import { sendToBackground } from "../utils/messaging";
 export default defineContentScript({
   matches: ["<all_urls>"],
   world: "ISOLATED",
+  runAt: "document_start",
   main() {
     console.log("🔍 Extension ID:", browser.runtime.id);
     console.log("🔍 Expected ID: feabcgcnjcdoenfijckdpclefalmakna");
@@ -13,14 +14,24 @@ export default defineContentScript({
       browser.runtime.id === "feabcgcnjcdoenfijckdpclefalmakna"
     );
 
-    // pollingTokens(); // 移除这行，现在在background script中执行
-
     // 在 ISOLATED world 中处理与 background 的通信
     setupIsolatedWorldHandler();
+
+    // 通知 MAIN world 消息处理器已准备好
+    window.postMessage(
+      {
+        type: "WALLET_ISOLATED_READY",
+        timestamp: Date.now(),
+      },
+      "*"
+    );
   },
 });
 
 function setupIsolatedWorldHandler() {
+  let requestCounter = 0;
+  const processingRequests = new Set<string>();
+
   // 监听来自 MAIN world 的消息
   window.addEventListener("message", async (event) => {
     if (
@@ -31,16 +42,32 @@ function setupIsolatedWorldHandler() {
     }
 
     const { method, params, messageId } = event.data;
+    const requestId = `${method}:${JSON.stringify(params || [])}`;
+    requestCounter++;
 
-    console.log(
-      "🚀 ~ window.addEventListener ~  method, params, messageId :",
+    console.log("🔍 Content script received request:", {
       method,
       params,
-      messageId
-    );
+      messageId,
+      requestId,
+      counter: requestCounter,
+    });
+
+    // 检查是否有相同的请求正在处理
+    if (processingRequests.has(requestId)) {
+      console.warn("⚠️ Duplicate request detected:", requestId);
+    }
+    processingRequests.add(requestId);
 
     try {
       const result = await handleWalletRequest(method, params);
+      console.log("✅ Content script handling successful:", {
+        method,
+        messageId,
+        requestId,
+        result,
+        counter: requestCounter,
+      });
       window.postMessage(
         {
           type: "WALLET_RESPONSE_FROM_BACKGROUND",
@@ -50,6 +77,13 @@ function setupIsolatedWorldHandler() {
         "*"
       );
     } catch (error) {
+      console.error("❌ Content script handling failed:", {
+        method,
+        messageId,
+        requestId,
+        error: (error as Error).message,
+        counter: requestCounter,
+      });
       window.postMessage(
         {
           type: "WALLET_RESPONSE_FROM_BACKGROUND",
@@ -58,6 +92,8 @@ function setupIsolatedWorldHandler() {
         },
         "*"
       );
+    } finally {
+      processingRequests.delete(requestId);
     }
   });
 }
@@ -65,11 +101,17 @@ function setupIsolatedWorldHandler() {
 // 处理钱包请求（在 ISOLATED world 中运行）
 async function handleWalletRequest(method: string, params: any[] = []) {
   switch (method) {
+    case "health_check":
+      console.log("🏥 Health check in content script");
+      return await sendToBackground("HEALTH_CHECK", undefined);
+
     case "eth_requestAccounts":
       return await requestAccounts();
 
     case "eth_accounts":
-      return await getAccounts();
+      const accounts = await getAccounts();
+      console.log("🚀 ~ handleWalletRequest ~ accounts:", accounts);
+      return accounts;
 
     case "eth_chainId":
       const chainId = await getChainId();

@@ -367,7 +367,7 @@ function setupDebugListener() {
     }
 
     if (event.data.type === "WALLET_REQUEST_TO_BACKGROUND") {
-      //   console.log("🔍 Debug panel: Got wallet request", event.data);
+      console.log("🔍 Debug panel: Got wallet request", event.data);
       const { method, params, messageId } = event.data;
       if (method && params && messageId) {
         const idStr = String(messageId); // 转换为字符串
@@ -383,7 +383,7 @@ function setupDebugListener() {
     }
 
     if (event.data.type === "WALLET_RESPONSE_FROM_BACKGROUND") {
-      //   console.log("🔍 Debug panel: Got wallet response", event.data);
+      console.log("🔍 Debug panel: Got wallet response", event.data);
       const { messageId, result, error } = event.data;
       if (messageId) {
         const idStr = String(messageId); // 转换为字符串

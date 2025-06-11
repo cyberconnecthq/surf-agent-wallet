@@ -248,6 +248,7 @@
         <h3>🧪 压力测试</h3>
         <div class="button-group">
           <button onclick="runStressTest()">运行压力测试</button>
+          <button onclick="testConcurrentRequests()">并发请求测试</button>
           <button onclick="clearLogs()">清除日志</button>
         </div>
       </div>
@@ -754,6 +755,76 @@
         );
       }
 
+      async function testConcurrentRequests() {
+        log("🚀 开始并发请求测试...");
+
+        // 测试同时发送多个相同请求
+        const concurrentCount = 5;
+        const requests = [];
+
+        for (let i = 0; i < concurrentCount; i++) {
+          log(`📤 发送并发请求 #${i + 1}`);
+          const startTime = performance.now();
+
+          const request = window.ethereum
+            .request({ method: "eth_accounts" })
+            .then((result) => {
+              const endTime = performance.now();
+              return {
+                index: i + 1,
+                result,
+                time: endTime - startTime,
+              };
+            })
+            .catch((error) => {
+              const endTime = performance.now();
+              return {
+                index: i + 1,
+                error: error.message,
+                time: endTime - startTime,
+              };
+            });
+
+          requests.push(request);
+        }
+
+        log(`📦 等待 ${concurrentCount} 个并发请求完成...`);
+
+        try {
+          const results = await Promise.all(requests);
+
+          let successCount = 0;
+          let errorCount = 0;
+
+          results.forEach((result) => {
+            if (result.error) {
+              log(
+                `❌ 并发请求 #${result.index} 失败 (${result.time.toFixed(
+                  2
+                )}ms): ${result.error}`,
+                "error"
+              );
+              errorCount++;
+            } else {
+              log(
+                `✅ 并发请求 #${result.index} 成功 (${result.time.toFixed(
+                  2
+                )}ms): ${JSON.stringify(result.result)}`,
+                "success"
+              );
+              successCount++;
+            }
+          });
+
+          log(
+            `🏁 并发测试完成! 成功: ${successCount}, 失败: ${errorCount}`,
+            successCount === concurrentCount ? "success" : "warning"
+          );
+        } catch (error) {
+          log(`❌ 并发测试异常: ${error.message}`, "error");
+        }
+      }
+
       function clearLogs() {
         const logs = document.getElementById("logs");
         logs.innerHTML =
@@ -934,6 +1005,33 @@ Expiration Time: ${expirationTime}`;
       // 页面加载时检查连接
       window.addEventListener("load", () => {
         log("🚀 页面加载完成，检查钱包连接状态...");
+
+        // 页面刷新后立即测试
+        setTimeout(async () => {
+          log("🔍 页面加载后 100ms 测试 - 测试消息链路...");
+          try {
+            const result = await window.ethereum.request({
+              method: "health_check",
+            });
+            log(`✅ 消息链路正常: ${JSON.stringify(result)}`, "success");
+          } catch (error) {
+            log(`❌ 消息链路异常: ${error.message}`, "error");
+          }
+        }, 100);
+
+        // 再测试一次账户获取
+        setTimeout(async () => {
+          log("🔍 页面加载后 500ms 测试 - 获取账户...");
+          try {
+            const accounts = await window.ethereum.request({
+              method: "eth_accounts",
+            });
+            log(`✅ 账户获取成功: ${JSON.stringify(accounts)}`, "success");
+          } catch (error) {
+            log(`❌ 账户获取失败: ${error.message}`, "error");
+          }
+        }, 500);
+
         checkConnection();
       });
     </script>
