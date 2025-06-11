@@ -150,58 +150,77 @@ export class TurnkeyService {
   }
 
   async getWallets() {
-    if (!this.organizationId) {
-      throw new Error("OrganizationId is not initialized");
-    }
+    // if (!this.organizationId) {
+    //   throw new Error("OrganizationId is not initialized");
+    // }
 
-    const walletId = await this.httpClient
-      ?.getWallets({
-        organizationId: this.organizationId,
-      })
-      .then((res) => res.wallets[0].walletId);
+    // TODO: revert this in real world
+    // const walletId = await this.httpClient
+    //   ?.getWallets({
+    //     organizationId: this.organizationId,
+    //   })
+    //   .then((res) => res.wallets[0].walletId);
 
-    if (!walletId) {
-      throw new Error("Wallet is not initialized");
-    }
+    // if (!walletId) {
+    //   throw new Error("Wallet is not initialized");
+    // }
 
-    const wallets = await this.httpClient
-      ?.getWalletAccounts({
-        organizationId: this.organizationId,
-        walletId: walletId,
-      })
-      .then((res) => res.accounts);
+    // const wallets = await this.httpClient
+    //   ?.getWalletAccounts({
+    //     organizationId: this.organizationId,
+    //     walletId: walletId,
+    //   })
+    //   .then((res) => res.accounts);
 
-    if (wallets) {
-      const sol = wallets.find(
-        (w) => w.addressFormat === "ADDRESS_FORMAT_SOLANA"
-      );
+    // if (wallets) {
+    //   const sol = wallets.find(
+    //     (w) => w.addressFormat === "ADDRESS_FORMAT_SOLANA"
+    //   );
 
-      const evm = wallets.find(
-        (w) => w.addressFormat === "ADDRESS_FORMAT_ETHEREUM"
-      );
+    //   const evm = wallets.find(
+    //     (w) => w.addressFormat === "ADDRESS_FORMAT_ETHEREUM"
+    //   );
 
-      this.walletAccounts = {
-        sol: {
-          address: sol?.address || "",
-          privateKey: "",
-          name: sol?.walletId || "",
-          balance: "0",
-        },
-        evm: {
-          address: evm?.address || "",
-          privateKey: "",
-          name: evm?.walletId || "",
-          balance: "0",
-        },
-      };
+    //   this.walletAccounts = {
+    //     sol: {
+    //       address: sol?.address || "",
+    //       privateKey: "",
+    //       name: sol?.walletId || "",
+    //       balance: "0",
+    //     },
+    //     evm: {
+    //       address: evm?.address || "",
+    //       privateKey: "",
+    //       name: evm?.walletId || "",
+    //       balance: "0",
+    //     },
+    //   };
 
-      return {
-        sol,
-        evm,
-      };
-    }
+    //   return {
+    //     sol,
+    //     evm,
+    //   };
+    // }
 
-    return undefined;
+    // return undefined;
+
+    const wallets = {
+      sol: {
+        address: "56UWMErnkF9wTAEk7DHxw2dHSUUspXTeFS5LrPUrCrQD",
+        privateKey: "",
+        name: "SOL",
+        balance: "0",
+      },
+      evm: {
+        address: "0x810D0b362bD1492Ad6aFEB723Dc3D6D9F7e4DC51",
+        privateKey: "",
+        name: "EVM",
+        balance: "0",
+      },
+    };
+    this.walletAccounts = wallets;
+
+    return wallets;
   }
 
   // Get current account (equivalent to WalletService.getCurrentAccount)

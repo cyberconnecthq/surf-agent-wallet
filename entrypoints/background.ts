@@ -46,22 +46,22 @@ async function initializeWalletService() {
     console.log("🔧 Initializing wallet service...");
 
     // 首先尝试自动加载现有钱包
-    const user = await turnkeyService.whoami();
+    // const user = await turnkeyService.whoami();
     const wallets = await turnkeyService.getWallets();
     console.log("🚀 ~ initializeWalletService ~ wallets:", wallets);
-    console.log("🔧 Auto load result:", user);
+    // console.log("🔧 Auto load result:", user);
 
-    if (user) {
-      console.log("✅ Existing wallet loaded successfully");
-      // TODO: wallet state
-      const state = walletService.getWalletState();
-      console.log("🔧 Loaded wallet state:", {
-        isUnlocked: state.isUnlocked,
-        accountsLength: state.accounts.length,
-        accounts: state.accounts.map((acc) => acc.address),
-      });
-      return;
-    }
+    // if (user) {
+    //   console.log("✅ Existing wallet loaded successfully");
+    //   // TODO: wallet state
+    //   const state = walletService.getWalletState();
+    //   console.log("🔧 Loaded wallet state:", {
+    //     isUnlocked: state.isUnlocked,
+    //     accountsLength: state.accounts.length,
+    //     accounts: state.accounts.map((acc) => acc.address),
+    //   });
+    //   return;
+    // }
 
     // 如果没有现有钱包，检查是否需要创建新钱包
     // const hasWallet = await walletService.hasWallet();
@@ -92,19 +92,17 @@ async function initializeWalletService() {
 }
 
 async function setupMessageHandlers() {
-  const { WalletService } = await import("./services/walletService");
   const { TurnkeyService } = await import("./services/TurnkeyService");
 
-  const walletService = WalletService.getInstance();
   const turnkeyService = TurnkeyService.getInstance();
 
   // GET_ACCOUNTS
   onBackgroundMessage("GET_ACCOUNTS", async () => {
-    const state = await turnkeyService.getWallets();
-    if (!state?.evm || !state?.sol) {
-      return [];
-    }
-    return [state.evm.address];
+    // const state = await turnkeyService.getWallets();
+    // if (!state?.evm && !state?.sol) {
+    //   return [];
+    // }
+    return ["0x810D0b362bD1492Ad6aFEB723Dc3D6D9F7e4DC51"];
   });
 
   // GET_CHAIN_ID

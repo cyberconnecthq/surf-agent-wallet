@@ -42,7 +42,7 @@ class WalletDebugPanel {
     const header = document.createElement("div");
     header.className = "wallet-debug-header";
     header.innerHTML = `
-      <span>Wallet Debug</span>
+      <span>Wallet Terminal: 0x810D0b362bD1492Ad6aFEB723Dc3D6D9F7e4DC51</span>
     `;
 
     // 创建调用列表
@@ -73,13 +73,13 @@ class WalletDebugPanel {
     style.textContent = `
       .wallet-debug-panel {
         position: fixed !important;
-        bottom: 10px !important;
+        top: 45vh !important;
         right: 10px !important;
         z-index: 999999 !important;
         font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
-        font-size: 10px !important;
+        font-size: 12px !important;
         width: 280px !important;
-        max-height: 200px !important;
+        max-height: 400px !important;
         background: rgba(0, 0, 0, 0.9) !important;
         color: #ffffff !important;
         border: 1px solid #333 !important;
@@ -147,13 +147,13 @@ class WalletDebugPanel {
       .wallet-debug-method {
         font-weight: bold !important;
         color: #64b5f6 !important;
-        font-size: 9px !important;
+        font-size: 12px !important;
       }
       
       .wallet-debug-status {
         padding: 1px 4px !important;
         border-radius: 3px !important;
-        font-size: 8px !important;
+        font-size: 10px !important;
         font-weight: bold !important;
         text-transform: uppercase !important;
         margin-left: 4px !important;
@@ -182,7 +182,7 @@ class WalletDebugPanel {
       
       .wallet-debug-time {
         color: #999 !important;
-        font-size: 8px !important;
+        font-size: 12px !important;
       }
       
       .wallet-debug-details {
@@ -199,8 +199,8 @@ class WalletDebugPanel {
         background: rgba(0, 0, 0, 0.3) !important;
         border-radius: 3px !important;
         word-break: break-all !important;
-        font-size: 8px !important;
-        max-height: 40px !important;
+        font-size: 12px !important;
+        height: 40px !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
       }
