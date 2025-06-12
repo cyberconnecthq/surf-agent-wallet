@@ -8,6 +8,12 @@ export interface WalletProtocolMap {
   GET_ACCOUNTS(): string[];
   GET_CHAIN_ID(): number;
   GET_BALANCE(data: { address: string; blockTag?: string }): string;
+  GET_BLOCK_NUMBER(): string;
+  ETH_CALL(data: { callData: any; blockTag?: string }): string;
+  WEB3_CLIENT_VERSION(): string;
+  ETH_GET_CODE(data: { address: string; blockTag?: string }): string;
+  ETH_GET_BLOCK_NUMBER(): string;
+  ETH_GET_TRANSACTION_BY_HASH(data: { hash: string }): any;
   SEND_TRANSACTION(transactionParam: any): string;
   SIGN_MESSAGE(data: { address: string; message: string }): string;
   PERSONAL_SIGN(data: { message: string; address: string }): string;

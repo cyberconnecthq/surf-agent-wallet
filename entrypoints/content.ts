@@ -142,6 +142,21 @@ async function handleWalletRequest(method: string, params: any[] = []) {
     case "wallet_addEthereumChain":
       return await addChain(params[0]);
 
+    case "eth_call":
+      return await ethCall(params[0], params[1]);
+
+    case "web3_clientVersion":
+      return await getClientVersion();
+
+    case "eth_getCode":
+      return await getCode(params[0], params[1]);
+
+    case "eth_blockNumber":
+      return await getBlockNumber();
+
+    case "eth_getTransactionByHash":
+      return await getTransactionByHash(params[0]);
+
     default:
       throw new Error(`Unsupported method: ${method}`);
   }
@@ -246,4 +261,24 @@ async function switchChain(chainParam: { chainId: string }) {
 
 async function addChain(chainParam: any) {
   return await sendToBackground("ADD_CHAIN", chainParam);
+}
+
+async function ethCall(callData: any, blockTag: string = "latest") {
+  return await sendToBackground("ETH_CALL", { callData, blockTag });
+}
+
+async function getClientVersion() {
+  return await sendToBackground("WEB3_CLIENT_VERSION", undefined);
+}
+
+async function getCode(address: string, blockTag: string = "latest") {
+  return await sendToBackground("ETH_GET_CODE", { address, blockTag });
+}
+
+async function getBlockNumber() {
+  return await sendToBackground("ETH_GET_BLOCK_NUMBER", undefined);
+}
+
+async function getTransactionByHash(hash: string) {
+  return await sendToBackground("ETH_GET_TRANSACTION_BY_HASH", { hash });
 }

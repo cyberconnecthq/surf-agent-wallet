@@ -135,6 +135,75 @@ async function setupMessageHandlers() {
     }
   });
 
+  // GET_BLOCK_NUMBER
+  onBackgroundMessage("GET_BLOCK_NUMBER", async () => {
+    try {
+      const blockNumber = await turnkeyService.getBlockNumber();
+      // 按照以太坊 JSON-RPC 规范，返回十六进制格式的区块号
+      return `0x${blockNumber.toString(16)}`;
+    } catch (error) {
+      console.error("Failed to get block number:", error);
+      throw new Error(
+        `Failed to get block number: ${(error as Error).message}`
+      );
+    }
+  });
+
+  // ETH_CALL
+  onBackgroundMessage("ETH_CALL", async ({ data }) => {
+    try {
+      const result = await turnkeyService.ethCall(data.callData, data.blockTag);
+      return result;
+    } catch (error) {
+      console.error("Failed to execute eth_call:", error);
+      throw new Error(`eth_call failed: ${(error as Error).message}`);
+    }
+  });
+
+  // WEB3_CLIENT_VERSION
+  onBackgroundMessage("WEB3_CLIENT_VERSION", async () => {
+    // 返回钱包的客户端版本信息
+    return "SurfWallet/0.0.1";
+  });
+
+  // ETH_GET_CODE
+  onBackgroundMessage("ETH_GET_CODE", async ({ data }) => {
+    try {
+      const code = await turnkeyService.getCode(data.address, data.blockTag);
+      return code;
+    } catch (error) {
+      console.error("Failed to get contract code:", error);
+      throw new Error(`eth_getCode failed: ${(error as Error).message}`);
+    }
+  });
+
+  // ETH_GET_BLOCK_NUMBER
+  onBackgroundMessage("ETH_GET_BLOCK_NUMBER", async () => {
+    try {
+      const blockNumber = await turnkeyService.getBlockNumber();
+      // 按照以太坊 JSON-RPC 规范，返回十六进制格式的区块号
+      return `0x${blockNumber.toString(16)}`;
+    } catch (error) {
+      console.error("Failed to get block number:", error);
+      throw new Error(
+        `Failed to get block number: ${(error as Error).message}`
+      );
+    }
+  });
+
+  // ETH_GET_TRANSACTION_BY_HASH
+  onBackgroundMessage("ETH_GET_TRANSACTION_BY_HASH", async ({ data }) => {
+    try {
+      const transaction = await turnkeyService.getTransactionByHash(data.hash);
+      return transaction;
+    } catch (error) {
+      console.error("Failed to get transaction by hash:", error);
+      throw new Error(
+        `eth_getTransactionByHash failed: ${(error as Error).message}`
+      );
+    }
+  });
+
   // GET_BALANCE
   onBackgroundMessage("GET_BALANCE", async ({ data }) => {
     try {

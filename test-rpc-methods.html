@@ -1,0 +1,387 @@
+<!-- @format -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>测试以太坊 RPC 方法</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      button {
+        background: #007cba;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #005a87;
+      }
+      .result {
+        background: #f5f5f5;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 3px;
+        word-break: break-all;
+      }
+      .error {
+        background: #ffebee;
+        color: #c62828;
+      }
+      .success {
+        background: #e8f5e8;
+        color: #2e7d32;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>测试以太坊 RPC 方法</h1>
+    <p>这个页面用于测试新实现的六个以太坊 JSON-RPC 方法。</p>
+
+    <div class="test-section">
+      <h3>1. eth_signTypedData_v4</h3>
+      <p>签名 EIP-712 结构化数据</p>
+      <button onclick="testSignTypedData()">测试 eth_signTypedData_v4</button>
+      <div id="signTypedDataResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+      <h3>2. web3_clientVersion</h3>
+      <p>获取钱包客户端版本信息</p>
+      <button onclick="testClientVersion()">测试 web3_clientVersion</button>
+      <div id="clientVersionResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+      <h3>3. eth_getBlockNumber</h3>
+      <p>获取最新区块号</p>
+      <button onclick="testGetBlockNumber()">测试 eth_getBlockNumber</button>
+      <div id="blockNumberResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+      <h3>4. eth_getCode</h3>
+      <p>获取智能合约代码</p>
+      <input
+        type="text"
+        id="contractAddress"
+        placeholder="合约地址 (例如: 0x...)"
+        style="width: 400px; padding: 5px"
+        value="0xA0b86a33E6E1e82DFd3C1E8C99C4F0E9C30a4E2f"
+      />
+      <button onclick="testGetCode()">测试 eth_getCode</button>
+      <div id="getCodeResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+      <h3>5. eth_call</h3>
+      <p>执行智能合约调用</p>
+      <div style="margin: 10px 0">
+        <label>目标地址:</label><br />
+        <input
+          type="text"
+          id="callTo"
+          placeholder="合约地址"
+          style="width: 400px; padding: 5px"
+          value="0xA0b86a33E6E1e82DFd3C1E8C99C4F0E9C30a4E2f"
+        />
+      </div>
+      <div style="margin: 10px 0">
+        <label>调用数据:</label><br />
+        <input
+          type="text"
+          id="callData"
+          placeholder="0x..."
+          style="width: 400px; padding: 5px"
+          value="0x18160ddd"
+        />
+      </div>
+      <button onclick="testEthCall()">测试 eth_call</button>
+      <div id="ethCallResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+      <h3>6. eth_getTransactionByHash</h3>
+      <p>通过交易哈希获取交易详情</p>
+      <input
+        type="text"
+        id="transactionHash"
+        placeholder="交易哈希 (例如: 0x...)"
+        style="width: 400px; padding: 5px"
+        value="0x"
+      />
+      <button onclick="testGetTransactionByHash()">
+        测试 eth_getTransactionByHash
+      </button>
+      <div id="getTransactionResult" class="result"></div>
+    </div>
+
+    <script>
+      // 检查以太坊提供者
+      function checkEthereum() {
+        if (typeof window.ethereum === "undefined") {
+          return false;
+        }
+        return true;
+      }
+
+      // 测试 eth_signTypedData_v4
+      async function testSignTypedData() {
+        const resultDiv = document.getElementById("signTypedDataResult");
+
+        if (!checkEthereum()) {
+          resultDiv.innerHTML =
+            '<span class="error">错误: 未检测到以太坊钱包</span>';
+          return;
+        }
+
+        try {
+          // 首先获取当前账户
+          const accounts = await window.ethereum.request({
+            method: "eth_requestAccounts",
+          });
+
+          if (accounts.length === 0) {
+            resultDiv.innerHTML =
+              '<span class="error">错误: 没有可用的账户</span>';
+            return;
+          }
+
+          const account = accounts[0];
+
+          // 定义 EIP-712 类型化数据
+          const typedData = {
+            domain: {
+              name: "Ether Mail",
+              version: "1",
+              chainId: 1,
+              verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC",
+            },
+            types: {
+              Person: [
+                { name: "name", type: "string" },
+                { name: "wallet", type: "address" },
+              ],
+              Mail: [
+                { name: "from", type: "Person" },
+                { name: "to", type: "Person" },
+                { name: "contents", type: "string" },
+              ],
+            },
+            message: {
+              from: {
+                name: "Cow",
+                wallet: "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826",
+              },
+              to: {
+                name: "Bob",
+                wallet: "0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB",
+              },
+              contents: "Hello, Bob!",
+            },
+          };
+
+          const signature = await window.ethereum.request({
+            method: "eth_signTypedData_v4",
+            params: [account, typedData],
+          });
+
+          resultDiv.innerHTML = `<span class="success">签名成功!<br>
+            <strong>签名地址:</strong> ${account}<br>
+            <strong>签名结果:</strong> ${signature}<br>
+            <strong>签名长度:</strong> ${signature.length} 字符
+          </span>`;
+        } catch (error) {
+          resultDiv.innerHTML = `<span class="error">错误: ${error.message}</span>`;
+        }
+      }
+
+      // 测试 web3_clientVersion
+      async function testClientVersion() {
+        const resultDiv = document.getElementById("clientVersionResult");
+
+        if (!checkEthereum()) {
+          resultDiv.innerHTML =
+            '<span class="error">错误: 未检测到以太坊钱包</span>';
+          return;
+        }
+
+        try {
+          const version = await window.ethereum.request({
+            method: "web3_clientVersion",
+          });
+          resultDiv.innerHTML = `<span class="success">客户端版本: ${version}</span>`;
+        } catch (error) {
+          resultDiv.innerHTML = `<span class="error">错误: ${error.message}</span>`;
+        }
+      }
+
+      // 测试 eth_getBlockNumber
+      async function testGetBlockNumber() {
+        const resultDiv = document.getElementById("blockNumberResult");
+
+        if (!checkEthereum()) {
+          resultDiv.innerHTML =
+            '<span class="error">错误: 未检测到以太坊钱包</span>';
+          return;
+        }
+
+        try {
+          const blockNumber = await window.ethereum.request({
+            method: "eth_getBlockNumber",
+          });
+          const decimalBlockNumber = parseInt(blockNumber, 16);
+          resultDiv.innerHTML = `<span class="success">最新区块号: ${blockNumber} (十进制: ${decimalBlockNumber})</span>`;
+        } catch (error) {
+          resultDiv.innerHTML = `<span class="error">错误: ${error.message}</span>`;
+        }
+      }
+
+      // 测试 eth_getCode
+      async function testGetCode() {
+        const resultDiv = document.getElementById("getCodeResult");
+        const address = document.getElementById("contractAddress").value;
+
+        if (!checkEthereum()) {
+          resultDiv.innerHTML =
+            '<span class="error">错误: 未检测到以太坊钱包</span>';
+          return;
+        }
+
+        if (!address) {
+          resultDiv.innerHTML =
+            '<span class="error">错误: 请输入合约地址</span>';
+          return;
+        }
+
+        try {
+          const code = await window.ethereum.request({
+            method: "eth_getCode",
+            params: [address, "latest"],
+          });
+
+          if (code === "0x" || code === "0x0") {
+            resultDiv.innerHTML = `<span class="success">地址 ${address} 不是合约地址 (返回代码: ${code})</span>`;
+          } else {
+            resultDiv.innerHTML = `<span class="success">合约代码长度: ${
+              code.length
+            } 字符<br>代码: ${code.substring(0, 100)}${
+              code.length > 100 ? "..." : ""
+            }</span>`;
+          }
+        } catch (error) {
+          resultDiv.innerHTML = `<span class="error">错误: ${error.message}</span>`;
+        }
+      }
+
+      // 测试 eth_call
+      async function testEthCall() {
+        const resultDiv = document.getElementById("ethCallResult");
+        const to = document.getElementById("callTo").value;
+        const data = document.getElementById("callData").value;
+
+        if (!checkEthereum()) {
+          resultDiv.innerHTML =
+            '<span class="error">错误: 未检测到以太坊钱包</span>';
+          return;
+        }
+
+        if (!to || !data) {
+          resultDiv.innerHTML =
+            '<span class="error">错误: 请输入目标地址和调用数据</span>';
+          return;
+        }
+
+        try {
+          const result = await window.ethereum.request({
+            method: "eth_call",
+            params: [
+              {
+                to: to,
+                data: data,
+              },
+              "latest",
+            ],
+          });
+          resultDiv.innerHTML = `<span class="success">调用结果: ${result}</span>`;
+        } catch (error) {
+          resultDiv.innerHTML = `<span class="error">错误: ${error.message}</span>`;
+        }
+      }
+
+      // 测试 eth_getTransactionByHash
+      async function testGetTransactionByHash() {
+        const resultDiv = document.getElementById("getTransactionResult");
+        const hash = document.getElementById("transactionHash").value;
+
+        if (!checkEthereum()) {
+          resultDiv.innerHTML =
+            '<span class="error">错误: 未检测到以太坊钱包</span>';
+          return;
+        }
+
+        if (!hash || hash === "0x") {
+          resultDiv.innerHTML =
+            '<span class="error">错误: 请输入有效的交易哈希</span>';
+          return;
+        }
+
+        try {
+          const transaction = await window.ethereum.request({
+            method: "eth_getTransactionByHash",
+            params: [hash],
+          });
+
+          if (transaction === null) {
+            resultDiv.innerHTML = `<span class="success">交易未找到或仍在等待确认</span>`;
+          } else {
+            resultDiv.innerHTML = `<span class="success">交易详情:<br>
+              <strong>哈希:</strong> ${transaction.hash}<br>
+              <strong>从:</strong> ${transaction.from}<br>
+              <strong>到:</strong> ${transaction.to || "Contract Creation"}<br>
+              <strong>值:</strong> ${
+                parseInt(transaction.value, 16) / Math.pow(10, 18)
+              } ETH<br>
+              <strong>燃料费:</strong> ${parseInt(transaction.gas, 16)}<br>
+              <strong>燃料价格:</strong> ${
+                parseInt(transaction.gasPrice, 16) / Math.pow(10, 9)
+              } Gwei<br>
+              <strong>区块号:</strong> ${
+                transaction.blockNumber
+                  ? parseInt(transaction.blockNumber, 16)
+                  : "Pending"
+              }<br>
+              <strong>状态:</strong> ${
+                transaction.blockNumber ? "Confirmed" : "Pending"
+              }
+            </span>`;
+          }
+        } catch (error) {
+          resultDiv.innerHTML = `<span class="error">错误: ${error.message}</span>`;
+        }
+      }
+
+      // 页面加载时检查以太坊提供者
+      window.addEventListener("load", () => {
+        if (!checkEthereum()) {
+          document.body.innerHTML =
+            '<div style="text-align: center; margin-top: 50px;"><h2>请安装并启用以太坊钱包扩展</h2></div>';
+        }
+      });
+    </script>
+  </body>
+</html>

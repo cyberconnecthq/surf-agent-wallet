@@ -241,6 +241,97 @@ export class TurnkeyService {
     }
   }
 
+  // Get current block number
+  async getBlockNumber(): Promise<number> {
+    try {
+      const provider = new ethers.JsonRpcProvider(this.currentNetwork.rpcUrl);
+      const blockNumber = await provider.getBlockNumber();
+      return blockNumber;
+    } catch (error) {
+      console.error("Error fetching block number:", error);
+      throw new Error(
+        `Failed to fetch block number: ${(error as Error).message}`
+      );
+    }
+  }
+
+  // Execute eth_call - call a contract function without sending a transaction
+  async ethCall(callData: any, blockTag: string = "latest"): Promise<string> {
+    try {
+      const provider = new ethers.JsonRpcProvider(this.currentNetwork.rpcUrl);
+
+      // Prepare transaction object with normalized addresses
+      const transaction: any = {
+        data: callData.data,
+        value: callData.value || "0x0",
+      };
+
+      // Normalize 'to' address if provided
+      if (callData.to) {
+        transaction.to = ethers.getAddress(callData.to);
+      }
+
+      // Normalize 'from' address if provided
+      if (callData.from) {
+        transaction.from = ethers.getAddress(callData.from);
+      }
+
+      // Add gas parameters if provided
+      if (callData.gas) {
+        transaction.gas = callData.gas;
+      }
+      if (callData.gasPrice) {
+        transaction.gasPrice = callData.gasPrice;
+      }
+
+      // Use send method for raw JSON-RPC call
+      const result = await provider.send("eth_call", [transaction, blockTag]);
+      return result;
+    } catch (error) {
+      console.error("Error executing eth_call:", error);
+      throw new Error(
+        `Failed to execute eth_call: ${(error as Error).message}`
+      );
+    }
+  }
+
+  // Get contract code at address
+  async getCode(address: string, blockTag: string = "latest"): Promise<string> {
+    try {
+      const provider = new ethers.JsonRpcProvider(this.currentNetwork.rpcUrl);
+      // Normalize address to proper checksum format
+      const normalizedAddress = ethers.getAddress(address);
+      // Use send method for raw JSON-RPC call with blockTag support
+      const code = await provider.send("eth_getCode", [
+        normalizedAddress,
+        blockTag,
+      ]);
+      return code;
+    } catch (error) {
+      console.error("Error fetching contract code:", error);
+      throw new Error(
+        `Failed to fetch contract code: ${(error as Error).message}`
+      );
+    }
+  }
+
+  // Get transaction by hash
+  async getTransactionByHash(hash: string): Promise<any> {
+    try {
+      const provider = new ethers.JsonRpcProvider(this.currentNetwork.rpcUrl);
+      // Use send method for raw JSON-RPC call
+      const transaction = await provider.send("eth_getTransactionByHash", [
+        hash,
+      ]);
+      return transaction;
+    } catch (error) {
+      console.error("Error fetching transaction by hash:", error);
+      throw new Error(
+        `Failed to fetch transaction by hash: ${(error as Error).message}`
+      );
+    }
+  }
+
   // Send transaction (simplified version - will use Turnkey signing in real implementation)
   async sendTransaction(
     to: string,
@@ -429,19 +520,49 @@ export class TurnkeyService {
     return signature;
   }
 
-  // Sign typed data (simplified version - will use Turnkey signing in real implementation)
+  // Sign typed data (EIP-712) - uses Turnkey signing implementation
   async signTypedData(typedData: any): Promise<string> {
-    // TODO:
+    console.log("🚀 ~ TurnkeyService ~ signTypedData ~ typedData:", typedData);
     const currentAccount = this.getCurrentAccount();
     if (!currentAccount) {
       throw new Error("No account available for signing");
     }
 
-    // TODO: Use Turnkey's typed data signing API
-    // For now, we'll throw an error indicating that this needs to be implemented with Turnkey
-    throw new Error(
-      "Typed data signing via Turnkey API not yet implemented. Please implement using Turnkey's signing methods."
-    );
+    if (!this.organizationId) {
+      throw new Error("OrganizationId is not initialized");
+    }
+
+    if (!this.httpClient) {
+      throw new Error("HttpClient is not initialized");
+    }
+
+    const signer = new TurnkeySigner({
+      client: this.httpClient,
+      organizationId: this.organizationId,
+      signWith: currentAccount.address,
+    });
+
+    try {
+      // Parse the typed data structure
+      const domain = typedData.domain;
+      const types = typedData.types;
+      const message = typedData.message || typedData.value;
+
+      // Remove EIP712Domain from types as ethers.js handles it automatically
+      const { EIP712Domain, ...otherTypes } = types;
+
+      console.log("🚀 ~ signTypedData ~ domain:", domain);
+      console.log("🚀 ~ signTypedData ~ types:", otherTypes);
+      console.log("🚀 ~ signTypedData ~ message:", message);
+
+      // Use TurnkeySigner to sign the typed data
+      const signature = await signer.signTypedData(domain, otherTypes, message);
+
+      return signature;
+    } catch (error) {
+      console.error("🚀 ~ TurnkeyService ~ signTypedData ~ error:", error);
+      throw new Error(`Failed to sign typed data: ${(error as Error).message}`);
+    }
   }
 
   // Switch network
