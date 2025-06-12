@@ -16,6 +16,12 @@
       "pattern": "^[a-zA-Z0-9\\-_]+$",
       "minLength": 0,
       "maxLength": 256
+    },
+    "ENV": {
+      "type": "string",
+      "title": "Environment",
+      "description": "The environment of the user's current session.",
+      "enum": ["development", "production"]
     }
   }
 }
