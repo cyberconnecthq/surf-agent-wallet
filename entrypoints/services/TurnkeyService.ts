@@ -1,7 +1,6 @@
 /** @format */
 
 import {
-  NETWORKS,
   Transaction,
   WalletAccount,
   WalletState,
@@ -10,6 +9,7 @@ import { ApiKeyStamper } from "@turnkey/api-key-stamper";
 import { TurnkeySigner } from "@turnkey/ethers";
 import { TurnkeyClient } from "@turnkey/http";
 import { ethers } from "ethers";
+import { BaseWalletService } from "./BaseWalletService";
 import { Keypair } from "./type";
 
 const baseUrl = "https://api.turnkey.com";
@@ -21,7 +21,7 @@ const baseUrl = "https://api.turnkey.com";
 // const apiPrivateKey =
 //   "28b83e4371139906bda6f95b19c4254d4e0b3bb1123ed073acadf888144dea8d";
 
-export class TurnkeyService {
+export class TurnkeyService extends BaseWalletService {
   private static instance: TurnkeyService;
   private keyPair?: Keypair;
   private httpClient?: TurnkeyClient;
@@ -30,9 +30,9 @@ export class TurnkeyService {
     sol: WalletAccount;
     evm: WalletAccount;
   };
-  private currentNetwork = NETWORKS[0];
 
   constructor() {
+    super();
     this.init();
   }
 
@@ -229,109 +229,6 @@ export class TurnkeyService {
     return this.walletAccounts?.evm || null;
   }
 
-  // Get balance for an address
-  async getBalance(address: string): Promise<string> {
-    try {
-      const provider = new ethers.JsonRpcProvider(this.currentNetwork.rpcUrl);
-      const balance = await provider.getBalance(address);
-      return ethers.formatEther(balance);
-    } catch (error) {
-      console.error("Error fetching balance:", error);
-      return "0";
-    }
-  }
-
-  // Get current block number
-  async getBlockNumber(): Promise<number> {
-    try {
-      const provider = new ethers.JsonRpcProvider(this.currentNetwork.rpcUrl);
-      const blockNumber = await provider.getBlockNumber();
-      return blockNumber;
-    } catch (error) {
-      console.error("Error fetching block number:", error);
-      throw new Error(
-        `Failed to fetch block number: ${(error as Error).message}`
-      );
-    }
-  }
-
-  // Execute eth_call - call a contract function without sending a transaction
-  async ethCall(callData: any, blockTag: string = "latest"): Promise<string> {
-    try {
-      const provider = new ethers.JsonRpcProvider(this.currentNetwork.rpcUrl);
-
-      // Prepare transaction object with normalized addresses
-      const transaction: any = {
-        data: callData.data,
-        value: callData.value || "0x0",
-      };
-
-      // Normalize 'to' address if provided
-      if (callData.to) {
-        transaction.to = ethers.getAddress(callData.to);
-      }
-
-      // Normalize 'from' address if provided
-      if (callData.from) {
-        transaction.from = ethers.getAddress(callData.from);
-      }
-
-      // Add gas parameters if provided
-      if (callData.gas) {
-        transaction.gas = callData.gas;
-      }
-      if (callData.gasPrice) {
-        transaction.gasPrice = callData.gasPrice;
-      }
-
-      // Use send method for raw JSON-RPC call
-      const result = await provider.send("eth_call", [transaction, blockTag]);
-      return result;
-    } catch (error) {
-      console.error("Error executing eth_call:", error);
-      throw new Error(
-        `Failed to execute eth_call: ${(error as Error).message}`
-      );
-    }
-  }
-
-  // Get contract code at address
-  async getCode(address: string, blockTag: string = "latest"): Promise<string> {
-    try {
-      const provider = new ethers.JsonRpcProvider(this.currentNetwork.rpcUrl);
-      // Normalize address to proper checksum format
-      const normalizedAddress = ethers.getAddress(address);
-      // Use send method for raw JSON-RPC call with blockTag support
-      const code = await provider.send("eth_getCode", [
-        normalizedAddress,
-        blockTag,
-      ]);
-      return code;
-    } catch (error) {
-      console.error("Error fetching contract code:", error);
-      throw new Error(
-        `Failed to fetch contract code: ${(error as Error).message}`
-      );
-    }
-  }
-
-  // Get transaction by hash
-  async getTransactionByHash(hash: string): Promise<any> {
-    try {
-      const provider = new ethers.JsonRpcProvider(this.currentNetwork.rpcUrl);
-      // Use send method for raw JSON-RPC call
-      const transaction = await provider.send("eth_getTransactionByHash", [
-        hash,
-      ]);
-      return transaction;
-    } catch (error) {
-      console.error("Error fetching transaction by hash:", error);
-      throw new Error(
-        `Failed to fetch transaction by hash: ${(error as Error).message}`
-      );
-    }
-  }
-
   // Send transaction (simplified version - will use Turnkey signing in real implementation)
   async sendTransaction(
     to: string,
@@ -352,12 +249,12 @@ export class TurnkeyService {
       throw new Error("HttpClient is not initialized");
     }
 
-    const provider = new ethers.JsonRpcProvider(this.currentNetwork.rpcUrl);
+    const provider = this.getProvider();
 
     // Build the transaction object with proper defaults
     const transaction: any = {
       to,
-      value: ethers.parseEther(amount),
+      value: this.parseEther(amount),
       data: data || "0x", // Ensure data is always defined
     };
 
@@ -396,9 +293,9 @@ export class TurnkeyService {
 
       if (balance < totalCost) {
         throw new Error(
-          `Insufficient balance. Required: ${ethers.formatEther(
+          `Insufficient balance. Required: ${this.formatEther(
             totalCost
-          )} ETH, Available: ${ethers.formatEther(balance)} ETH`
+          )} ETH, Available: ${this.formatEther(balance)} ETH`
         );
       }
 
@@ -565,18 +462,6 @@ export class TurnkeyService {
     }
   }
 
-  // Switch network
-  switchNetwork(chainId: number): void {
-    console.log("🚀 ~ TurnkeyService ~ switchNetwork ~ chainId:", chainId);
-    const network = NETWORKS.find((n) => n.chainId === chainId);
-    console.log("🚀 ~ TurnkeyService ~ switchNetwork ~ network:", network);
-    if (network) {
-      this.currentNetwork = network;
-    } else {
-      throw new Error(`Network with chainId ${chainId} not found`);
-    }
-  }
-
   getWalletState(): WalletState {
     const accounts = [
       this.walletAccounts?.evm,
@@ -587,7 +472,7 @@ export class TurnkeyService {
       isUnlocked: true,
       accounts: accounts,
       currentAccountIndex: 0,
-      currentNetwork: this.currentNetwork,
+      currentNetwork: this.getCurrentNetwork(),
       transactions: [],
     };
   }
@@ -632,45 +517,6 @@ export class TurnkeyService {
         unsignedTransaction: "",
         type: "TRANSACTION_TYPE_ETHEREUM",
       },
-    });
-  }
-
-  // Storage 辅助方法
-  private async saveToStorage(key: string, value: any): Promise<void> {
-    return new Promise((resolve) => {
-      if (typeof browser !== "undefined" && browser.storage) {
-        browser.storage.local.set({ [key]: value }, resolve);
-      } else if (
-        typeof window !== "undefined" &&
-        (window as any).chrome?.storage
-      ) {
-        (window as any).chrome.storage.local.set({ [key]: value }, resolve);
-      } else {
-        // Fallback to localStorage for development
-        localStorage.setItem(key, JSON.stringify(value));
-        resolve();
-      }
-    });
-  }
-
-  private async getFromStorage(key: string): Promise<any> {
-    return new Promise((resolve) => {
-      if (typeof browser !== "undefined" && browser.storage) {
-        browser.storage.local.get([key], (result) => {
-          resolve(result[key]);
-        });
-      } else if (
-        typeof window !== "undefined" &&
-        (window as any).chrome?.storage
-      ) {
-        (window as any).chrome.storage.local.get([key], (result: any) => {
-          resolve(result[key]);
-        });
-      } else {
-        // Fallback to localStorage for development
-        const value = localStorage.getItem(key);
-        resolve(value ? JSON.parse(value) : undefined);
-      }
     });
   }
 }

@@ -63,7 +63,6 @@ async function initializeWalletService() {
     // if (user) {
     //   console.log("✅ Existing wallet loaded successfully");
     //   // TODO: wallet state
-    //   const state = walletService.getWalletState();
     //   console.log("🔧 Loaded wallet state:", {
     //     isUnlocked: state.isUnlocked,
     //     accountsLength: state.accounts.length,
@@ -72,12 +71,10 @@ async function initializeWalletService() {
     //   return;
     // }
     // 如果没有现有钱包，检查是否需要创建新钱包
-    // const hasWallet = await walletService.hasWallet();
     // const hasWallet = await turnkeyService.hasWallet();
     // console.log("🔧 Has wallet:", hasWallet);
     // if (!hasWallet) {
     //   console.log("🔧 No wallet found, creating new wallet...");
-    //   const result = await walletService.createWalletAuto();
     //   console.log("✅ Wallet created successfully!", {
     //     address: result.account.address,
     //     mnemonic: result.mnemonic.substring(0, 20) + "...", // 只显示部分助记词用于调试
@@ -86,7 +83,6 @@ async function initializeWalletService() {
     //   console.log("✅ Wallet exists but needs to be unlocked");
     // }
     // 验证最终状态
-    // const finalState = walletService.getWalletState();
     // console.log("🔧 Final wallet state:", {
     //   isUnlocked: finalState.isUnlocked,
     //   accountsLength: finalState.accounts.length,

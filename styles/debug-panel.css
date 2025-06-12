@@ -8,7 +8,7 @@
   font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace !important;
   font-size: 12px !important;
   width: 280px !important;
-  max-height: 400px !important;
+  max-height: 600px !important;
   background: rgba(0, 0, 0, 0.9) !important;
   color: #ffffff !important;
   border: 1px solid #333 !important;
@@ -54,7 +54,7 @@
 }
 
 .wallet-debug-calls {
-  max-height: 160px !important;
+  max-height: 200px !important;
   overflow-y: auto !important;
   padding: 4px !important;
 }

@@ -28,7 +28,7 @@ interface DebugCall {
 const WalletDebugPanel: React.FC = () => {
     const [calls, setCalls] = useState<Map<string, DebugCall>>(new Map());
     const [currentAddress, setCurrentAddress] = useState<string>("Loading...");
-    const maxCalls = 10;
+    const maxCalls = 1;
 
     // 获取当前钱包地址
     const fetchCurrentAddress = useCallback(async () => {
@@ -201,11 +201,6 @@ const WalletDebugPanel: React.FC = () => {
                     {timeStr} {durationStr}
                 </div>
                 <div className="wallet-debug-details">
-                    {call.params.length > 0 && (
-                        <div className="wallet-debug-params">
-                            → {JSON.stringify(call.params)}
-                        </div>
-                    )}
                     {call.result !== undefined && (
                         <div className="wallet-debug-result">
                             ✓ {JSON.stringify(call.result)}
@@ -217,6 +212,12 @@ const WalletDebugPanel: React.FC = () => {
                         </div>
                     )}
                 </div>
+                {call.params.length > 0 && (
+                    <div className="wallet-debug-params">
+                        → {JSON.stringify(call.params)}
+                    </div>
+                )}
+
             </div>
         );
     };

@@ -2,7 +2,7 @@
   "name": "surf-wallet",
   "description": "A Surf wallet browser extension",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "scripts": {
     "dev": "wxt",
