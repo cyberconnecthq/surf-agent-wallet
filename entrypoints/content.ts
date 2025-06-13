@@ -8,11 +8,6 @@ export default defineContentScript({
   runAt: "document_start",
   main() {
     console.log("🔍 Extension ID:", browser.runtime.id);
-    console.log("🔍 Expected ID: feabcgcnjcdoenfijckdpclefalmakna");
-    console.log(
-      "🔍 ID Match:",
-      browser.runtime.id === "feabcgcnjcdoenfijckdpclefalmakna"
-    );
 
     // 在 ISOLATED world 中处理与 background 的通信
     setupIsolatedWorldHandler();

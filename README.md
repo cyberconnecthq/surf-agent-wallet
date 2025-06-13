@@ -23,7 +23,7 @@ Surf Wallet 是一款浏览器钱包插件，基于 WXT + React 构建。
 1.  克隆项目到本地:
 
     ```bash
-    git clone https://github.com/your-username/surf-wallet.git
+    git clone https://github.com/your-username/surf-agent-wallet.git
     cd surf-wallet
     ```
 
