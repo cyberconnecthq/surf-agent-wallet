@@ -49,14 +49,6 @@
     padding: 4px;
     color: #fff !important;
 
-    .title {
-      font-size: 12px;
-      font-weight: 500;
-      color: lightgreen;
-      width: 100%;
-      line-height: 1;
-    }
-
     .token-item {
       display: flex !important;
       align-items: center !important;
@@ -245,4 +237,12 @@
   align-items: center;
   gap: 4px;
   justify-content: space-between;
+}
+
+.title {
+  font-size: 12px;
+  font-weight: 500;
+  color: lightgreen;
+  width: 100%;
+  line-height: 1;
 }
