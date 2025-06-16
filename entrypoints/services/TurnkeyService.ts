@@ -10,7 +10,13 @@ import { TurnkeySigner } from "@turnkey/ethers";
 import { TurnkeyClient } from "@turnkey/http";
 import { ethers } from "ethers";
 import { BaseWalletService } from "./BaseWalletService";
-import { Keypair } from "./type";
+import { generateAPIKeyFormat } from "./generateAPIKey";
+import {
+  fetchMe,
+  patchPublicKeyBySessionId,
+  pollingSessionStatus,
+  pollingTokens,
+} from "./surfApiService";
 
 const baseUrl = "https://api.turnkey.com";
 
@@ -23,7 +29,7 @@ const baseUrl = "https://api.turnkey.com";
 
 export class TurnkeyService extends BaseWalletService {
   private static instance: TurnkeyService;
-  private keyPair?: Keypair;
+  // private keyPair?: Keypair;
   private httpClient?: TurnkeyClient;
   private organizationId?: string;
   private walletAccounts?: {
@@ -48,8 +54,42 @@ export class TurnkeyService extends BaseWalletService {
   }
 
   async init() {
+    const { ENV, ACCESS_TOKEN, SESSION_ID } = await pollingTokens();
     // TODO: we need generate agent keypair here in real world
-    // const { publicKey, privateKey } = await generateAPIKeyFormat();
+    const { publicKey, privateKey } = await generateAPIKeyFormat();
+    const {} = await patchPublicKeyBySessionId({
+      sessionId: SESSION_ID,
+      publicKey,
+      accessToken: ACCESS_TOKEN,
+    });
+
+    const { data } = await pollingSessionStatus({
+      sessionId: SESSION_ID,
+      accessToken: ACCESS_TOKEN,
+    });
+
+    if (data.status === "RUNNING") {
+      const me = await fetchMe(ACCESS_TOKEN);
+
+      this.organizationId = me.data.turnkey_sub_org.id;
+
+      const walletAccouts = {
+        sol: {
+          address: me.data.turnkey_sub_org.default_sol_addr || "",
+          privateKey: "",
+          name: "SOL",
+          balance: "0",
+        },
+        evm: {
+          address: me.data.turnkey_sub_org.default_eth_addr || "",
+          privateKey: "",
+          name: "EVM",
+          balance: "0",
+        },
+      };
+
+      this.walletAccounts = walletAccouts;
+    }
 
     try {
       // the demo agent keypair
@@ -66,7 +106,6 @@ export class TurnkeyService extends BaseWalletService {
 
       const httpClient = new TurnkeyClient({ baseUrl }, stamper);
 
-      this.keyPair = { publicKey, privateKey };
       this.httpClient = httpClient;
       this.organizationId = organizationId;
       const wallets = await this.getWallets();
@@ -150,77 +189,7 @@ export class TurnkeyService extends BaseWalletService {
   }
 
   async getWallets() {
-    // if (!this.organizationId) {
-    //   throw new Error("OrganizationId is not initialized");
-    // }
-
-    // TODO: revert this in real world
-    // const walletId = await this.httpClient
-    //   ?.getWallets({
-    //     organizationId: this.organizationId,
-    //   })
-    //   .then((res) => res.wallets[0].walletId);
-
-    // if (!walletId) {
-    //   throw new Error("Wallet is not initialized");
-    // }
-
-    // const wallets = await this.httpClient
-    //   ?.getWalletAccounts({
-    //     organizationId: this.organizationId,
-    //     walletId: walletId,
-    //   })
-    //   .then((res) => res.accounts);
-
-    // if (wallets) {
-    //   const sol = wallets.find(
-    //     (w) => w.addressFormat === "ADDRESS_FORMAT_SOLANA"
-    //   );
-
-    //   const evm = wallets.find(
-    //     (w) => w.addressFormat === "ADDRESS_FORMAT_ETHEREUM"
-    //   );
-
-    //   this.walletAccounts = {
-    //     sol: {
-    //       address: sol?.address || "",
-    //       privateKey: "",
-    //       name: sol?.walletId || "",
-    //       balance: "0",
-    //     },
-    //     evm: {
-    //       address: evm?.address || "",
-    //       privateKey: "",
-    //       name: evm?.walletId || "",
-    //       balance: "0",
-    //     },
-    //   };
-
-    //   return {
-    //     sol,
-    //     evm,
-    //   };
-    // }
-
-    // return undefined;
-
-    const wallets = {
-      sol: {
-        address: "56UWMErnkF9wTAEk7DHxw2dHSUUspXTeFS5LrPUrCrQD",
-        privateKey: "",
-        name: "SOL",
-        balance: "0",
-      },
-      evm: {
-        address: "0x810D0b362bD1492Ad6aFEB723Dc3D6D9F7e4DC51",
-        privateKey: "",
-        name: "EVM",
-        balance: "0",
-      },
-    };
-    this.walletAccounts = wallets;
-
-    return wallets;
+    return this.walletAccounts;
   }
 
   // Get current account (equivalent to WalletService.getCurrentAccount)
