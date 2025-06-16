@@ -549,7 +549,9 @@ const WalletDebugPanel: React.FC = () => {
                         Wallet Terminal
                     </span>
 
-                    <div style={{
+                    {/**
+                     * 
+                     <div style={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: 4,
@@ -577,6 +579,7 @@ const WalletDebugPanel: React.FC = () => {
                             {connectionStatus}
                         </span>
                     </div>
+                     */}
                 </div>
 
                 <div className="wallet-status">

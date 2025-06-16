@@ -54,9 +54,9 @@ export class TurnkeyService extends BaseWalletService {
     try {
       // the demo agent keypair
       const publicKey =
-        "02e4f8f3ef743697cdcfb5255b8cb13a96068b27e2b117a60bf4a20756fff87018";
+        "03195893b2f3851cc45959391e6f70b04f18d5e949305b952b0cc985aa42237ed8";
       const privateKey =
-        "f2d4f25bcbbf2e8d0502dff60b277b5305536503a2a58c91fe4e88c825283a95";
+        "271e0595a182b78041665deab59b74bf32c8a8eea02e534c64529a4d1470c944";
       const organizationId = "5faa0997-e4a4-4f21-8385-ca1113c32264";
 
       const stamper = new ApiKeyStamper({
