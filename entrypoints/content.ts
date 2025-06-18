@@ -7,8 +7,6 @@ export default defineContentScript({
   world: "ISOLATED",
   runAt: "document_start",
   main() {
-    console.log("🔍 Extension ID:", browser.runtime.id);
-
     // 在 ISOLATED world 中处理与 background 的通信
     setupIsolatedWorldHandler();
 
@@ -40,14 +38,6 @@ function setupIsolatedWorldHandler() {
     const requestId = `${method}:${JSON.stringify(params || [])}`;
     requestCounter++;
 
-    console.log("🔍 Content script received request:", {
-      method,
-      params,
-      messageId,
-      requestId,
-      counter: requestCounter,
-    });
-
     // 检查是否有相同的请求正在处理
     if (processingRequests.has(requestId)) {
       console.warn("⚠️ Duplicate request detected:", requestId);
@@ -56,13 +46,7 @@ function setupIsolatedWorldHandler() {
 
     try {
       const result = await handleWalletRequest(method, params);
-      console.log("✅ Content script handling successful:", {
-        method,
-        messageId,
-        requestId,
-        result,
-        counter: requestCounter,
-      });
+
       window.postMessage(
         {
           type: "WALLET_RESPONSE_FROM_BACKGROUND",
@@ -97,7 +81,6 @@ function setupIsolatedWorldHandler() {
 async function handleWalletRequest(method: string, params: any[] = []) {
   switch (method) {
     case "health_check":
-      console.log("🏥 Health check in content script");
       return await sendToBackground("HEALTH_CHECK", undefined);
 
     case "eth_requestAccounts":
@@ -105,12 +88,10 @@ async function handleWalletRequest(method: string, params: any[] = []) {
 
     case "eth_accounts":
       const accounts = await getAccounts();
-      console.log("🚀 ~ handleWalletRequest ~ accounts:", accounts);
       return accounts;
 
     case "eth_chainId":
       const chainId = await getChainId();
-      console.log("🚀 ~ handleWalletRequest ~ chainId:", chainId);
       return await getChainId();
 
     case "net_version":
@@ -190,10 +171,6 @@ async function getAccounts() {
 
 async function getChainId() {
   const result = await sendToBackground("GET_CHAIN_ID", undefined);
-  console.log(
-    "🚀 ~ getChainId ~ result:",
-    `0x${(result as number).toString(16)}`
-  );
 
   return `0x${(result as number).toString(16)}`;
 }
@@ -225,7 +202,6 @@ async function signTypedData(address: string, typedData: any) {
 }
 
 async function switchChain(chainParam: { chainId: string }) {
-  console.log("🚀 ~ switchChain ~ chainParam:", chainParam);
   const chainId = parseInt(chainParam.chainId, 16);
 
   const currentChainId = await getChainId();
@@ -246,10 +222,8 @@ async function switchChain(chainParam: { chainId: string }) {
       "*"
     );
 
-    console.log("🚀 ~ switchChain ~ success ~ chainParam:", chainParam);
     return null;
   } catch (error) {
-    console.error("🚀 ~ switchChain ~ error:", error);
     throw error;
   }
 }

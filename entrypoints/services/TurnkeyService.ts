@@ -10,7 +10,11 @@ import { TurnkeySigner } from "@turnkey/ethers";
 import { TurnkeyClient } from "@turnkey/http";
 import { ethers } from "ethers";
 import { BaseWalletService } from "./BaseWalletService";
-import { Keypair } from "./type";
+import { generateAPIKeyFormat } from "./generateAPIKey";
+import { KeyStoreService } from "./KeyStoreService";
+import { fetchMe, pollingSessionStatus, pollingTokens } from "./surfApiService";
+
+const keyStore = KeyStoreService.getInstance();
 
 const baseUrl = "https://api.turnkey.com";
 
@@ -23,7 +27,7 @@ const baseUrl = "https://api.turnkey.com";
 
 export class TurnkeyService extends BaseWalletService {
   private static instance: TurnkeyService;
-  private keyPair?: Keypair;
+  // private keyPair?: Keypair;
   private httpClient?: TurnkeyClient;
   private organizationId?: string;
   private walletAccounts?: {
@@ -48,16 +52,76 @@ export class TurnkeyService extends BaseWalletService {
   }
 
   async init() {
-    // TODO: we need generate agent keypair here in real world
-    // const { publicKey, privateKey } = await generateAPIKeyFormat();
+    const { publicKey, privateKey } = await generateAPIKeyFormat();
+
+    console.log(
+      "🚀 ~ TurnkeyService ~ init ~ publicKey, privateKey :",
+      publicKey,
+      privateKey
+    );
+
+    // const _privateKey = await keyStore.getPrivateKey(PASSWORD);
+
+    // console.log("🚀 ~ TurnkeyService ~ init ~ _privateKey:", _privateKey);
+
+    const { ENV, ACCESS_TOKEN, SESSION_ID } = await pollingTokens();
+    console.log("🚀 ~ TurnkeyService ~ init ~ ENV:", ENV);
+    console.log(
+      "🚀 ~ TurnkeyService ~ init ~ ACCESS_TOKEN, SESSION_ID:",
+      ACCESS_TOKEN,
+      SESSION_ID
+    );
+    // // TODO: we need generate agent keypair here in real world
+    // const { success } = await patchPublicKeyBySessionId({
+    //   sessionId: SESSION_ID,
+    //   publicKey,
+    //   accessToken: ACCESS_TOKEN,
+    // });
+    // console.log("🚀 ~ TurnkeyService ~ init ~ success:", success);
+
+    const { data } = await pollingSessionStatus({
+      sessionId: SESSION_ID,
+      accessToken: ACCESS_TOKEN,
+    });
+    console.log("🚀 ~ TurnkeyService ~ init ~ data:", data);
+
+    if (data.status === "RUNNING") {
+      const me = await fetchMe(ACCESS_TOKEN);
+      console.log("🚀 ~ TurnkeyService ~ init ~ me:", me);
+
+      this.organizationId = me.data.turnkey_sub_org.id;
+
+      const walletAccouts = {
+        sol: {
+          address: me.data.turnkey_sub_org.default_sol_addr || "",
+          privateKey: "",
+          name: "SOL",
+          balance: "0",
+        },
+        evm: {
+          address: me.data.turnkey_sub_org.default_eth_addr || "",
+          privateKey: "",
+          name: "EVM",
+          balance: "0",
+        },
+      };
+
+      this.walletAccounts = walletAccouts;
+    }
 
     try {
-      // the demo agent keypair
-      const publicKey =
-        "03195893b2f3851cc45959391e6f70b04f18d5e949305b952b0cc985aa42237ed8";
-      const privateKey =
-        "271e0595a182b78041665deab59b74bf32c8a8eea02e534c64529a4d1470c944";
-      const organizationId = "5faa0997-e4a4-4f21-8385-ca1113c32264";
+      // // the demo agent keypair
+      // const publicKey =
+      //   "03195893b2f3851cc45959391e6f70b04f18d5e949305b952b0cc985aa42237ed8";
+      // const privateKey =
+      //   "271e0595a182b78041665deab59b74bf32c8a8eea02e534c64529a4d1470c944";
+      // const organizationId = "5faa0997-e4a4-4f21-8385-ca1113c32264";
+
+      // const publicKey =
+      //   "031ec507a15b6f74cce87634bd697059e602dbc2e3608865bca7fc5a80fd5e802d";
+      // const privateKey =
+      //   "c416f778debad1fc85f1021515b3b06a1ed4ec857cb14ae544bfd1cb3cbf9a0f";
+      // const organizationId = "5faa0997-e4a4-4f21-8385-ca1113c32264";
 
       const stamper = new ApiKeyStamper({
         apiPublicKey: publicKey,
@@ -66,9 +130,7 @@ export class TurnkeyService extends BaseWalletService {
 
       const httpClient = new TurnkeyClient({ baseUrl }, stamper);
 
-      this.keyPair = { publicKey, privateKey };
       this.httpClient = httpClient;
-      this.organizationId = organizationId;
       const wallets = await this.getWallets();
       console.log("🚀 ~ TurnkeyService ~ init ~ wallets:", wallets);
 
@@ -97,48 +159,11 @@ export class TurnkeyService extends BaseWalletService {
       console.error("🚀 ~ TurnkeyClient ~ init ~ error:", error);
     }
   }
-  // TODO: revert this function in real world
-  // async createUser(keyPair: Keypair) {
-  //   const stamper = new ApiKeyStamper({
-  //     apiPublicKey: apiPublicKey,
-  //     apiPrivateKey: apiPrivateKey,
-  //   });
-
-  //   const httpClient = new TurnkeyHttpClient({ baseUrl }, stamper);
-  //   const user = await httpClient.createUsers({
-  //     type: "ACTIVITY_TYPE_CREATE_USERS_V3",
-  //     timestampMs: Date.now().toString(),
-  //     organizationId: organizationId,
-  //     parameters: {
-  //       users: [
-  //         {
-  //           userName: "extension@1",
-  //           apiKeys: [
-  //             {
-  //               apiKeyName: "extension@1",
-  //               publicKey: keyPair.publicKey,
-  //               curveType: "API_KEY_CURVE_P256",
-  //             },
-  //           ],
-  //           authenticators: [],
-  //           userTags: [],
-  //           oauthProviders: [],
-  //         },
-  //       ],
-  //     },
-  //   });
-
-  //   return {
-  //     isSuccess: user.activity.status === "ACTIVITY_STATUS_COMPLETED",
-  //     user,
-  //   };
-  // }
 
   async hasWallet() {
     return (await this.getFromStorage("hasWallet")) || false;
   }
 
-  // Auto load wallet (equivalent to WalletService.loadWalletAuto)
   async loadWalletAuto(): Promise<boolean> {
     try {
       const wallets = await this.getWallets();
@@ -150,77 +175,7 @@ export class TurnkeyService extends BaseWalletService {
   }
 
   async getWallets() {
-    // if (!this.organizationId) {
-    //   throw new Error("OrganizationId is not initialized");
-    // }
-
-    // TODO: revert this in real world
-    // const walletId = await this.httpClient
-    //   ?.getWallets({
-    //     organizationId: this.organizationId,
-    //   })
-    //   .then((res) => res.wallets[0].walletId);
-
-    // if (!walletId) {
-    //   throw new Error("Wallet is not initialized");
-    // }
-
-    // const wallets = await this.httpClient
-    //   ?.getWalletAccounts({
-    //     organizationId: this.organizationId,
-    //     walletId: walletId,
-    //   })
-    //   .then((res) => res.accounts);
-
-    // if (wallets) {
-    //   const sol = wallets.find(
-    //     (w) => w.addressFormat === "ADDRESS_FORMAT_SOLANA"
-    //   );
-
-    //   const evm = wallets.find(
-    //     (w) => w.addressFormat === "ADDRESS_FORMAT_ETHEREUM"
-    //   );
-
-    //   this.walletAccounts = {
-    //     sol: {
-    //       address: sol?.address || "",
-    //       privateKey: "",
-    //       name: sol?.walletId || "",
-    //       balance: "0",
-    //     },
-    //     evm: {
-    //       address: evm?.address || "",
-    //       privateKey: "",
-    //       name: evm?.walletId || "",
-    //       balance: "0",
-    //     },
-    //   };
-
-    //   return {
-    //     sol,
-    //     evm,
-    //   };
-    // }
-
-    // return undefined;
-
-    const wallets = {
-      sol: {
-        address: "56UWMErnkF9wTAEk7DHxw2dHSUUspXTeFS5LrPUrCrQD",
-        privateKey: "",
-        name: "SOL",
-        balance: "0",
-      },
-      evm: {
-        address: "0x810D0b362bD1492Ad6aFEB723Dc3D6D9F7e4DC51",
-        privateKey: "",
-        name: "EVM",
-        balance: "0",
-      },
-    };
-    this.walletAccounts = wallets;
-
-    return wallets;
+    return this.walletAccounts;
   }
 
   // Get current account (equivalent to WalletService.getCurrentAccount)

@@ -22,8 +22,6 @@ if (typeof globalThis !== "undefined" && !globalThis.Buffer) {
 }
 
 export default defineBackground(() => {
-  console.log("🔧 Background script loaded at:", new Date().toISOString());
-
   // // 立即初始化钱包服务
   // initializeWalletService();
 
@@ -40,13 +38,11 @@ export default defineBackground(() => {
 
   // 扩展安装时自动生成钱包（备用）
   browser.runtime.onInstalled.addListener(async () => {
-    console.log("Extension installed, ensuring wallet exists...");
     await initializeWalletService();
   });
 
   // 扩展启动时也初始化（处理重新加载的情况）
   browser.runtime.onStartup.addListener(async () => {
-    console.log("Extension startup, re-initializing...");
     await initializeWalletService();
   });
 });
@@ -54,11 +50,9 @@ export default defineBackground(() => {
 async function initializeWalletService() {
   try {
     const turnkeyService = TurnkeyService.getInstance();
-    console.log("🔧 Initializing wallet service...");
     // 首先尝试自动加载现有钱包
     // const user = await turnkeyService.whoami();
     const wallets = await turnkeyService.getWallets();
-    console.log("🚀 ~ initializeWalletService ~ wallets:", wallets);
     // console.log("🔧 Auto load result:", user);
     // if (user) {
     //   console.log("✅ Existing wallet loaded successfully");
@@ -94,23 +88,21 @@ async function initializeWalletService() {
 }
 
 async function setupMessageHandlers() {
-  console.log(
-    "🚀 ~ setupMessageHandlers ~ setupMessageHandlers:🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀��🚀🚀🚀🚀🚀🚀"
-  );
-
   // 添加健康检查处理器
   onBackgroundMessage("HEALTH_CHECK", async () => {
-    console.log("🏥 Health check received");
     return { status: "ok", timestamp: Date.now() };
   });
 
   // GET_ACCOUNTS
   onBackgroundMessage("GET_ACCOUNTS", async () => {
     try {
-      console.log("🚀 ~ onBackgroundMessage ~ GET_ACCOUNTS: START");
-      const accounts = ["0x810D0b362bD1492Ad6aFEB723Dc3D6D9F7e4DC51"];
-      console.log("🚀 ~ onBackgroundMessage ~ GET_ACCOUNTS: SUCCESS", accounts);
-      return accounts;
+      const accounts = await turnkeyService.getWallets();
+
+      if (!accounts?.evm) return [];
+      return [accounts.evm.address];
+
+      // const accounts = ["0x810D0b362bD1492Ad6aFEB723Dc3D6D9F7e4DC51"];
+      // return accounts;
     } catch (error) {
       console.error("❌ GET_ACCOUNTS failed:", error);
       return [];
@@ -121,10 +113,7 @@ async function setupMessageHandlers() {
   onBackgroundMessage("GET_CHAIN_ID", async () => {
     try {
       const state = turnkeyService.getWalletState();
-      console.log(
-        "🚀 ~ onBackgroundMessage ~ state.currentNetwork.chainId:",
-        state.currentNetwork.chainId
-      );
+
       return state.currentNetwork.chainId;
     } catch (error) {
       return NETWORKS[0].chainId;
@@ -217,8 +206,6 @@ async function setupMessageHandlers() {
   onBackgroundMessage(
     "SEND_TRANSACTION",
     async ({ data: transactionParam }) => {
-      console.log("🔧 Background: SEND_TRANSACTION", transactionParam);
-
       // 检查钱包状态
       const currentAccount = turnkeyService.getCurrentAccount();
       if (!currentAccount) {
@@ -253,14 +240,6 @@ async function setupMessageHandlers() {
         }
       }
 
-      console.log("🔧 Transaction params:", {
-        to,
-        valueInEth,
-        originalValue: value,
-        data,
-        gasPrice,
-      });
-
       try {
         // Pass the correct parameters to sendTransaction
         const txHash = await turnkeyService.sendTransaction(
@@ -271,7 +250,6 @@ async function setupMessageHandlers() {
         );
         return txHash;
       } catch (error) {
-        console.log("🚀 ~ error:", error);
         throw new Error(`Transaction failed: ${(error as Error).message}`);
       }
     }
@@ -370,7 +348,6 @@ async function setupMessageHandlers() {
 
   // SWITCH_CHAIN
   onBackgroundMessage("SWITCH_CHAIN", async ({ data }) => {
-    console.log("🚀 ~ onBackgroundMessage ~ SWITCH_CHAIN ~ data:", data);
     try {
       // 执行链切换
       turnkeyService.switchNetwork(data.chainId);
@@ -381,10 +358,8 @@ async function setupMessageHandlers() {
         throw new Error(`Failed to switch to chain ${data.chainId}`);
       }
 
-      console.log("🚀 ~ SWITCH_CHAIN ~ success ~ chainId:", data.chainId);
       return null;
     } catch (error) {
-      console.error("🚀 ~ SWITCH_CHAIN ~ error:", error);
       throw new Error(`Failed to switch chain: ${(error as Error).message}`);
     }
   });
@@ -427,69 +402,4 @@ async function setupMessageHandlers() {
       throw new Error(`Transaction failed: ${(error as Error).message}`);
     }
   });
-
-  console.log("🔧 Background message handlers setup complete");
 }
-
-// 从content script移过来的调试函数
-async function debugManagedStorage() {
-  try {
-    // 检查 browser.storage.managed 是否存在
-    if (!browser.storage || !browser.storage.managed) {
-      console.error("❌ browser.storage.managed is not available");
-      return;
-    }
-
-    console.log("✅ browser.storage.managed exists");
-
-    // 尝试获取所有管理配置
-    const allManaged = await browser.storage.managed.get();
-    console.log("🔍 All managed storage:", allManaged);
-
-    // 尝试获取特定的 backendToken
-    const USER_ACCESS_TOKEN = await browser.storage.managed.get(
-      "USER_ACCESS_TOKEN"
-    );
-    console.log(
-      "🚀 ~ debugManagedStorage ~ USER_ACCESS_TOKEN:",
-      USER_ACCESS_TOKEN
-    );
-
-    const SESSION_ID = await browser.storage.managed.get("SESSION_ID");
-    console.log("🚀 ~ debugManagedStorage ~ SESSION_ID:", SESSION_ID);
-
-    return {
-      USER_ACCESS_TOKEN: USER_ACCESS_TOKEN.USER_ACCESS_TOKEN,
-      SESSION_ID: SESSION_ID.SESSION_ID,
-    };
-  } catch (error) {
-    console.error("❌ Error accessing managed storage:", error);
-    console.error("❌ Error details:", (error as Error).message);
-  }
-}
-
-// 从content script移过来的轮询函数，现在在background中运行
-const pollingTokens = async () => {
-  console.log("🔄 Starting token polling in background script...");
-
-  let ACCESS_TOKEN = "";
-  let SESSION_ID = "";
-
-  do {
-    console.log("🔍 Polling tokens...");
-
-    const result = await debugManagedStorage();
-    ACCESS_TOKEN = result?.USER_ACCESS_TOKEN;
-    SESSION_ID = result?.SESSION_ID;
-
-    if (ACCESS_TOKEN && SESSION_ID) {
-      console.log("✅ Tokens found! ACCESS_TOKEN and SESSION_ID are ready");
-      // 可以在这里触发其他需要认证的初始化操作
-      break;
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-  } while (!ACCESS_TOKEN || !SESSION_ID);
-
-  console.log("🎉 Token polling completed successfully");
-};
