@@ -93,6 +93,55 @@ pnpm zip:firefox
 └── ...
 ```
 
+## 架构与数据流
+
+Surf Wallet 使用「Popup UI ↔ Background Service ↔ Wallet Services ↔ 外部 API」的典型浏览器插件分层架构。下面从两个维度（组件关系 & 时序）说明数据在各层之间的流向。
+
+### 组件关系
+
+1. **Popup（React）**  
+   用户交互界面。通过 `browser.runtime.sendMessage` 向 Background 发送指令 (如获取余额、发起签名等)，并监听来自 Background 的响应以更新界面状态。
+
+2. **Content Script / Inject Script**  
+   向网页注入 `window.surf` 对象，供 DApp 调用。其请求同样经由 `browser.runtime.sendMessage` 发送给 Background，再由后者统一处理。
+
+3. **Background**  
+   插件核心逻辑所在。接收来自 Popup 和 Content Script 的消息，根据不同 `method` 调用相应的 **Wallet Services**，并把结果再回传给消息源。
+
+4. **Wallet Services**
+
+   - `TurnkeyService`：封装 [@turnkey/sdk-browser]，负责密钥管理、交易签名。
+   - `surfApiService`：与 Surf 后端通信。
+   - `KeyStoreService`：本地持久化加密存储用户凭证。  
+     这些 Service 通过组合的方式被 Background 调用，不直接暴露给 UI 层。
+
+5. **外部 API / 区块链网络**  
+   包括 Turnkey API、Surf API 以及 EVM 兼容链节点。真正的链上交互在这里发生。
+
+### 时序图示例
+
+下面的时序图以「Popup 请求发送交易」为例，展示一次完整的数据流动过程：
+
+```mermaid
+sequenceDiagram
+    participant Popup
+    participant Background
+    participant WalletServices as Wallet Services
+    participant TurnkeyAPI as Turnkey API
+    participant SurfAPI as Surf API
+
+    Popup->>Background: sendMessage({ method: "wallet_sendTransaction", params })
+    Background->>WalletServices: wallet_sendTransaction(params)
+    WalletServices->>TurnkeyAPI: sign & send raw tx
+    WalletServices->>SurfAPI: notify / sync (optional)
+    WalletServices-->>Background: txHash / receipt
+    Background-->>Popup: resolve Promise
+```
+
+> 其它诸如「获取余额」「批量签名」等流程与此类似，只是调用的 Service 方法及外部接口不同。
+
+通过这种清晰的责任分层，Surf Wallet 能够在保证安全性的同时，实现高可扩展性与良好的用户体验。
+
 ## 主要依赖
 
 - [wxt](https://wxt.dev/): 下一代浏览器插件开发工具

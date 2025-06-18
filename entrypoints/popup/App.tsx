@@ -55,7 +55,6 @@ function App() {
         }
       }
 
-      console.log("✅ Popup: Wallet exists, ready to use");
       setAppState("ready");
       setRetryCount(0); // 重置重试计数
     } catch (error) {
@@ -81,7 +80,6 @@ function App() {
 
 
   const renderContent = () => {
-    console.log("🚀 ~ renderContent ~ appState:", appState)
     switch (appState) {
       case "loading":
         return (

@@ -67,9 +67,7 @@ export abstract class BaseWalletService {
 
   // 通用的网络管理
   switchNetwork(chainId: number): void {
-    console.log("🚀 ~ BaseWalletService ~ switchNetwork ~ chainId:", chainId);
     const network = NETWORKS.find((n) => n.chainId === chainId);
-    console.log("🚀 ~ BaseWalletService ~ switchNetwork ~ network:", network);
     if (network) {
       this.currentNetwork = network;
     } else {

@@ -22,8 +22,6 @@ if (typeof globalThis !== "undefined" && !globalThis.Buffer) {
 }
 
 export default defineBackground(() => {
-  console.log("🔧 Background script loaded at:", new Date().toISOString());
-
   // // 立即初始化钱包服务
   // initializeWalletService();
 
@@ -40,13 +38,11 @@ export default defineBackground(() => {
 
   // 扩展安装时自动生成钱包（备用）
   browser.runtime.onInstalled.addListener(async () => {
-    console.log("Extension installed, ensuring wallet exists...");
     await initializeWalletService();
   });
 
   // 扩展启动时也初始化（处理重新加载的情况）
   browser.runtime.onStartup.addListener(async () => {
-    console.log("Extension startup, re-initializing...");
     await initializeWalletService();
   });
 });
@@ -54,11 +50,9 @@ export default defineBackground(() => {
 async function initializeWalletService() {
   try {
     const turnkeyService = TurnkeyService.getInstance();
-    console.log("🔧 Initializing wallet service...");
     // 首先尝试自动加载现有钱包
     // const user = await turnkeyService.whoami();
     const wallets = await turnkeyService.getWallets();
-    console.log("🚀 ~ initializeWalletService ~ wallets:", wallets);
     // console.log("🔧 Auto load result:", user);
     // if (user) {
     //   console.log("✅ Existing wallet loaded successfully");
@@ -94,23 +88,21 @@ async function initializeWalletService() {
 }
 
 async function setupMessageHandlers() {
-  console.log(
-    "🚀 ~ setupMessageHandlers ~ setupMessageHandlers:🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀��🚀🚀🚀🚀🚀🚀"
-  );
-
   // 添加健康检查处理器
   onBackgroundMessage("HEALTH_CHECK", async () => {
-    console.log("🏥 Health check received");
     return { status: "ok", timestamp: Date.now() };
   });
 
   // GET_ACCOUNTS
   onBackgroundMessage("GET_ACCOUNTS", async () => {
     try {
-      console.log("🚀 ~ onBackgroundMessage ~ GET_ACCOUNTS: START");
-      const accounts = ["0x810D0b362bD1492Ad6aFEB723Dc3D6D9F7e4DC51"];
-      console.log("🚀 ~ onBackgroundMessage ~ GET_ACCOUNTS: SUCCESS", accounts);
-      return accounts;
+      const accounts = await turnkeyService.getWallets();
+
+      if (!accounts?.evm) return [];
+      return [accounts.evm.address];
+
+      // const accounts = ["0x810D0b362bD1492Ad6aFEB723Dc3D6D9F7e4DC51"];
+      // return accounts;
     } catch (error) {
       console.error("❌ GET_ACCOUNTS failed:", error);
       return [];
@@ -121,10 +113,7 @@ async function setupMessageHandlers() {
   onBackgroundMessage("GET_CHAIN_ID", async () => {
     try {
       const state = turnkeyService.getWalletState();
-      console.log(
-        "🚀 ~ onBackgroundMessage ~ state.currentNetwork.chainId:",
-        state.currentNetwork.chainId
-      );
+
       return state.currentNetwork.chainId;
     } catch (error) {
       return NETWORKS[0].chainId;
@@ -217,8 +206,6 @@ async function setupMessageHandlers() {
   onBackgroundMessage(
     "SEND_TRANSACTION",
     async ({ data: transactionParam }) => {
-      console.log("🔧 Background: SEND_TRANSACTION", transactionParam);
-
       // 检查钱包状态
       const currentAccount = turnkeyService.getCurrentAccount();
       if (!currentAccount) {
@@ -253,14 +240,6 @@ async function setupMessageHandlers() {
         }
       }
 
-      console.log("🔧 Transaction params:", {
-        to,
-        valueInEth,
-        originalValue: value,
-        data,
-        gasPrice,
-      });
-
       try {
         // Pass the correct parameters to sendTransaction
         const txHash = await turnkeyService.sendTransaction(
@@ -271,7 +250,6 @@ async function setupMessageHandlers() {
         );
         return txHash;
       } catch (error) {
-        console.log("🚀 ~ error:", error);
         throw new Error(`Transaction failed: ${(error as Error).message}`);
       }
     }
@@ -370,7 +348,6 @@ async function setupMessageHandlers() {
 
   // SWITCH_CHAIN
   onBackgroundMessage("SWITCH_CHAIN", async ({ data }) => {
-    console.log("🚀 ~ onBackgroundMessage ~ SWITCH_CHAIN ~ data:", data);
     try {
       // 执行链切换
       turnkeyService.switchNetwork(data.chainId);
@@ -381,10 +358,8 @@ async function setupMessageHandlers() {
         throw new Error(`Failed to switch to chain ${data.chainId}`);
       }
 
-      console.log("🚀 ~ SWITCH_CHAIN ~ success ~ chainId:", data.chainId);
       return null;
     } catch (error) {
-      console.error("🚀 ~ SWITCH_CHAIN ~ error:", error);
       throw new Error(`Failed to switch chain: ${(error as Error).message}`);
     }
   });
@@ -427,6 +402,4 @@ async function setupMessageHandlers() {
       throw new Error(`Transaction failed: ${(error as Error).message}`);
     }
   });
-
-  console.log("🔧 Background message handlers setup complete");
 }

@@ -1,6 +1,11 @@
 /** @format */
 
-const baseUrl = "https://api.stg.ask.surf/muninn/v1";
+const getBaseUrl = async () => {
+  const { ENV } = await pollingTokens();
+  return ENV === "production"
+    ? "https://api.ask.surf/muninn/v1"
+    : "https://api.stg.ask.surf/muninn/v1";
+};
 
 // Type definitions
 interface SessionData {
@@ -55,6 +60,7 @@ const patchPublicKeyBySessionId = async (params: {
 }): Promise<BaseApiResponse> => {
   const { sessionId, publicKey, maxRetries = 3, accessToken } = params;
   let lastError: Error;
+  const baseUrl = await getBaseUrl();
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -113,10 +119,12 @@ const pollingSessionStatus = async (params: {
   const {
     sessionId,
     accessToken,
-    maxAttempts = 60,
-    pollInterval = 1000,
+    maxAttempts = 600,
+    pollInterval = 1500, // after 15 minutes, the access token will be expired
   } = params;
   let lastError: Error;
+
+  const baseUrl = await getBaseUrl();
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
@@ -176,6 +184,7 @@ const fetchMe = async (
   maxRetries: number = 3
 ): Promise<UserApiResponse> => {
   let lastError: Error;
+  const baseUrl = await getBaseUrl();
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -224,35 +233,24 @@ const fetchMe = async (
   throw lastError!;
 };
 
-// 从content script移过来的调试函数
-async function fetchManagedStorage() {
+async function fetchLocalStorage() {
   try {
     // 检查 browser.storage.managed 是否存在
-    if (!browser.storage || !browser.storage.managed) {
+    if (!browser.storage || !browser.storage.local) {
       console.error("❌ browser.storage.managed is not available");
       return;
     }
 
-    console.log("✅ browser.storage.managed exists");
-
-    // 尝试获取所有管理配置
-    const allManaged = await browser.storage.managed.get();
-    console.log("🔍 All managed storage:", allManaged);
+    console.log("✅ browser.storage.managed is available");
 
     // 尝试获取特定的 backendToken
-    const USER_ACCESS_TOKEN = await browser.storage.managed.get(
+    const USER_ACCESS_TOKEN = await browser.storage.local.get(
       "USER_ACCESS_TOKEN"
     );
-    console.log(
-      "🚀 ~ debugManagedStorage ~ USER_ACCESS_TOKEN:",
-      USER_ACCESS_TOKEN
-    );
 
-    const SESSION_ID = await browser.storage.managed.get("SESSION_ID");
-    console.log("🚀 ~ debugManagedStorage ~ SESSION_ID:", SESSION_ID);
+    const SESSION_ID = await browser.storage.local.get("SESSION_ID");
 
-    const ENV = await browser.storage.managed.get("ENV");
-    console.log("🚀 ~ debugManagedStorage ~ ENV:", ENV);
+    const ENV = await browser.storage.local.get("ENV");
 
     return {
       USER_ACCESS_TOKEN: USER_ACCESS_TOKEN.USER_ACCESS_TOKEN,
@@ -276,7 +274,7 @@ const pollingTokens = async () => {
   do {
     console.log("🔍 Polling tokens...");
 
-    const result = await fetchManagedStorage();
+    const result = await fetchLocalStorage();
     ACCESS_TOKEN = result?.USER_ACCESS_TOKEN;
     SESSION_ID = result?.SESSION_ID;
     ENV = result?.ENV;
@@ -288,7 +286,7 @@ const pollingTokens = async () => {
     }
 
     await new Promise((resolve) => setTimeout(resolve, 5000));
-  } while (!ACCESS_TOKEN || !SESSION_ID);
+  } while (!ACCESS_TOKEN || !SESSION_ID || !ENV);
 
   return {
     ACCESS_TOKEN,
