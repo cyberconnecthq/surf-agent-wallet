@@ -658,6 +658,9 @@ const WalletDebugPanel: React.FC = () => {
                 </div> */}
             </div>
             <div className="wallet-debug-calls">
+                <span className="title" >
+                    Function call
+                </span>
                 {calls.size === 0 ? (
                     <div className="wallet-debug-empty">No calls yet</div>
                 ) : (

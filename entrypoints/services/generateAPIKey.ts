@@ -1,16 +1,49 @@
 /** @format */
 
 import { KeyStoreService } from "./KeyStoreService";
-import { PASSWORD } from "./PASSWORD";
 
 const keyStore = KeyStoreService.getInstance();
 
+export async function globalGenerateAPIKeyFormat(
+  callback?: (p: { publicKey: string; generatedAt: string }) => void
+) {
+  await browser.storage.local.remove(["PUBLIC_KEY"]);
+  await keyStore.clearStoredData();
+
+  const { publicKey } = await generateAPIKeyFormat();
+
+  callback?.({
+    publicKey,
+    generatedAt: new Date().toISOString(),
+  });
+
+  return {
+    publicKey,
+    generatedAt: new Date().toISOString(),
+  };
+}
+
+export async function getFromStorage() {
+  const result = await browser.storage.local.get(["PUBLIC_KEY", "PRIVATE_KEY"]);
+
+  if (result.PUBLIC_KEY && result.PRIVATE_KEY) {
+    const keypair = {
+      publicKey: result.PUBLIC_KEY,
+      privateKey: result.PRIVATE_KEY,
+    };
+
+    return keypair;
+  }
+  return null;
+}
+
 export async function generateAPIKeyFormat() {
   try {
-    // Always generate fresh keys - clear any existing stored keys first
-    // This ensures unique keys in e2b environment on each run
-    await browser.storage.local.remove(["PUBLIC_KEY"]);
-    await keyStore.clearStoredData();
+    const storagedKeypair = await getFromStorage();
+
+    if (storagedKeypair) {
+      return storagedKeypair;
+    }
 
     const result = await generateECDSAKeyPair();
 
@@ -23,16 +56,21 @@ export async function generateAPIKeyFormat() {
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
 
+    // 存储到 browser storage
     browser.storage.local.set({
       PUBLIC_KEY: compressedPubKeyHex,
+      generatedAt: new Date().toISOString(),
+      PRIVATE_KEY: privateKeyHex,
     });
 
-    await keyStore.storePrivateKey(privateKeyHex, PASSWORD);
+    // await keyStore.storePrivateKey(privateKeyHex, PASSWORD);
 
-    return {
+    const keyPair = {
       publicKey: compressedPubKeyHex,
       privateKey: privateKeyHex,
     };
+
+    return keyPair;
   } catch (error) {
     console.error("❌ 生成API密钥失败:", error);
     throw error;

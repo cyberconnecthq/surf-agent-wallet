@@ -10,20 +10,20 @@ import { TurnkeySigner } from "@turnkey/ethers";
 import { TurnkeyClient } from "@turnkey/http";
 import { ethers } from "ethers";
 import { BaseWalletService } from "./BaseWalletService";
-import { generateAPIKeyFormat } from "./generateAPIKey";
-import { KeyStoreService } from "./KeyStoreService";
+import {
+  globalGenerateAPIKeyFormat as _globalGenerateAPIKeyFormat,
+  getFromStorage,
+} from "./generateAPIKey";
 import { fetchMe, pollingSessionStatus, pollingTokens } from "./surfApiService";
 
-const keyStore = KeyStoreService.getInstance();
+// 将 generateAPIKeyFormat 和 getStoredAPIKeyFormat 暴露到 globalThis
+declare global {
+  var generateSurfPublicKey: typeof _globalGenerateAPIKeyFormat;
+}
+
+globalThis.generateSurfPublicKey = _globalGenerateAPIKeyFormat;
 
 const baseUrl = "https://api.turnkey.com";
-
-//  TODO:  get this keypair and organizationId from api  via SESSION_ID in managed storage
-// const organizationId = "1f1295c3-c0fe-40ee-aea7-253ee8ede227";
-// const apiPublicKey =
-//   "03ec4abd879d323765b33b32ec25d950a2f9380eec8188edf0a155a39b379b8b36";
-// const apiPrivateKey =
-//   "28b83e4371139906bda6f95b19c4254d4e0b3bb1123ed073acadf888144dea8d";
 
 export class TurnkeyService extends BaseWalletService {
   private static instance: TurnkeyService;
@@ -51,8 +51,37 @@ export class TurnkeyService extends BaseWalletService {
     return Boolean(this.httpClient);
   }
 
+  // 轮询等待外部生成 keypair
+  private async waitForKeypair(
+    maxRetries = 600,
+    intervalMs = 300
+  ): Promise<{ publicKey: string; privateKey: string }> {
+    let retries = 0;
+
+    while (retries < maxRetries) {
+      const keyPair = await getFromStorage();
+
+      if (keyPair) {
+        console.log("🔑 Found external generated keypair");
+        return keyPair;
+      }
+
+      console.log(`🔄 Waiting for keypair... (${retries + 1}/${maxRetries})`);
+      await new Promise((resolve) => setTimeout(resolve, intervalMs));
+      retries++;
+    }
+
+    throw new Error(
+      "❌ Timeout waiting for external keypair generation. Please call globalThis.generateAPIKeyFormat() first."
+    );
+  }
+
   async init() {
-    const { publicKey, privateKey } = await generateAPIKeyFormat();
+    // 轮询等待外部生成 keypair
+    console.log("🔑 Waiting for external keypair generation...");
+    let keyPair = await this.waitForKeypair();
+
+    const { publicKey, privateKey } = keyPair;
 
     console.log(
       "🚀 ~ TurnkeyService ~ init ~ publicKey, privateKey :",
