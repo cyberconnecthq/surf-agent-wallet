@@ -126,22 +126,22 @@ export class TurnkeyService extends BaseWalletService {
       this.walletAccounts = walletAccouts;
     }
 
-    const walletAccouts = {
-      sol: {
-        address: "0x0000000000000000000000000000000000000000",
-        privateKey: "",
-        name: "SOL",
-        balance: "0",
-      },
-      evm: {
-        address: "0x810D0b362bD1492Ad6aFEB723Dc3D6D9F7e4DC51",
-        privateKey: "",
-        name: "EVM",
-        balance: "0",
-      },
-    };
+    // const walletAccouts = {
+    //   sol: {
+    //     address: "0x0000000000000000000000000000000000000000",
+    //     privateKey: "",
+    //     name: "SOL",
+    //     balance: "0",
+    //   },
+    //   evm: {
+    //     address: "0x810D0b362bD1492Ad6aFEB723Dc3D6D9F7e4DC51",
+    //     privateKey: "",
+    //     name: "EVM",
+    //     balance: "0",
+    //   },
+    // };
 
-    this.walletAccounts = walletAccouts;
+    // this.walletAccounts = walletAccouts;
 
     try {
       const stamper = new ApiKeyStamper({
