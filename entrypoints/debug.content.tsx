@@ -442,23 +442,9 @@ const WalletDebugPanel: React.FC = () => {
     // 组件挂载时获取所有数据
     useEffect(() => {
         checkConnectionStatus();
+        fetchCurrentAddress();
         fetchNetworkInfo();
-    }, [checkConnectionStatus, fetchNetworkInfo]);
-
-    useEffect(() => {
-        let interval: NodeJS.Timeout | null = null;
-        if (!currentAddress.toLocaleLowerCase().startsWith('0x')) {
-            interval = setInterval(() => {
-                fetchCurrentAddress();
-            }, 1000);
-        }
-
-        return () => {
-            if (interval) {
-                clearInterval(interval);
-            }
-        }
-    }, [currentAddress, fetchCurrentAddress]);
+    }, [checkConnectionStatus, fetchCurrentAddress, fetchNetworkInfo]);
 
     const addCall = useCallback(
         (method: string, params: any[], messageId: string) => {
@@ -523,6 +509,7 @@ const WalletDebugPanel: React.FC = () => {
             }
 
             if (event.data.type === "WALLET_REQUEST_TO_BACKGROUND") {
+                console.log("🔍 Debug panel: Got wallet request", event.data);
                 const { method, params, messageId } = event.data;
                 if (method && params && messageId) {
                     const idStr = String(messageId);
@@ -534,6 +521,7 @@ const WalletDebugPanel: React.FC = () => {
             }
 
             if (event.data.type === "WALLET_RESPONSE_FROM_BACKGROUND") {
+                console.log("🔍 Debug panel: Got wallet response", event.data);
                 const { messageId, result, error } = event.data;
                 if (messageId) {
                     const idStr = String(messageId);

@@ -5,6 +5,8 @@ export default defineContentScript({
   world: "MAIN",
   runAt: "document_start",
   main() {
+    console.log("🚀 MAIN world content script starting...");
+
     // 先注入基础的 ethereum 对象，但标记为未就绪
     injectEthereumProvider(false);
 
@@ -13,6 +15,7 @@ export default defineContentScript({
     window.addEventListener("message", (event) => {
       if (event.data.type === "WALLET_ISOLATED_READY" && !isolatedReady) {
         isolatedReady = true;
+        console.log("✅ ISOLATED world ready, activating ethereum provider");
         injectEthereumProvider(true); // 激活完整功能
       }
     });
@@ -157,6 +160,15 @@ function injectEthereumProvider(fullyActivate = true) {
           .toString(36)
           .substr(2, 9)}-${performance.now()}`;
 
+        console.log(
+          "🚀 EthereumProvider.request:",
+          args.method,
+          "messageId:",
+          messageId,
+          "requestKey:",
+          requestKey
+        );
+
         window.postMessage(
           {
             type: "WALLET_REQUEST_TO_BACKGROUND",
@@ -177,6 +189,12 @@ function injectEthereumProvider(fullyActivate = true) {
           ) {
             isHandled = true;
             window.removeEventListener("message", handleResponse);
+            console.log(
+              "✅ EthereumProvider.request response:",
+              args.method,
+              "messageId:",
+              messageId
+            );
 
             // 从 pending 请求中移除
             this._pendingRequests.delete(requestKey);
@@ -317,6 +335,8 @@ function injectEthereumProvider(fullyActivate = true) {
     if (event.data.type === "WALLET_EVENT") {
       const ethProvider = (window as any).ethereum;
       if (ethProvider && ethProvider.isMyWallet) {
+        console.log("🚀 ~ window.addEventListener ~ event:", event.data);
+
         ethProvider.dispatchEvent(
           new CustomEvent(event.data.event, {
             detail: event.data.data,

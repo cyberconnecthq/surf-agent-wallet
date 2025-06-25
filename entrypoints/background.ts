@@ -22,6 +22,8 @@ if (typeof globalThis !== "undefined" && !globalThis.Buffer) {
 }
 
 export default defineBackground(() => {
+  console.log("🔧 Background script loaded at:", new Date().toISOString());
+
   // // 立即初始化钱包服务
   // initializeWalletService();
 
@@ -38,11 +40,13 @@ export default defineBackground(() => {
 
   // 扩展安装时自动生成钱包（备用）
   browser.runtime.onInstalled.addListener(async () => {
+    console.log("Extension installed, ensuring wallet exists...");
     await initializeWalletService();
   });
 
   // 扩展启动时也初始化（处理重新加载的情况）
   browser.runtime.onStartup.addListener(async () => {
+    console.log("Extension startup, re-initializing...");
     await initializeWalletService();
   });
 });
@@ -50,30 +54,61 @@ export default defineBackground(() => {
 async function initializeWalletService() {
   try {
     const turnkeyService = TurnkeyService.getInstance();
+    console.log("🔧 Initializing wallet service...");
     // 首先尝试自动加载现有钱包
     // const user = await turnkeyService.whoami();
     const wallets = await turnkeyService.getWallets();
+    console.log("🚀 ~ initializeWalletService ~ wallets:", wallets);
+    // console.log("🔧 Auto load result:", user);
+    // if (user) {
+    //   console.log("✅ Existing wallet loaded successfully");
+    //   // TODO: wallet state
+    //   console.log("🔧 Loaded wallet state:", {
+    //     isUnlocked: state.isUnlocked,
+    //     accountsLength: state.accounts.length,
+    //     accounts: state.accounts.map((acc) => acc.address),
+    //   });
+    //   return;
+    // }
+    // 如果没有现有钱包，检查是否需要创建新钱包
+    // const hasWallet = await turnkeyService.hasWallet();
+    // console.log("🔧 Has wallet:", hasWallet);
+    // if (!hasWallet) {
+    //   console.log("🔧 No wallet found, creating new wallet...");
+    //   console.log("✅ Wallet created successfully!", {
+    //     address: result.account.address,
+    //     mnemonic: result.mnemonic.substring(0, 20) + "...", // 只显示部分助记词用于调试
+    //   });
+    // } else {
+    //   console.log("✅ Wallet exists but needs to be unlocked");
+    // }
+    // 验证最终状态
+    // console.log("🔧 Final wallet state:", {
+    //   isUnlocked: finalState.isUnlocked,
+    //   accountsLength: finalState.accounts.length,
+    //   accounts: finalState.accounts.map((acc) => acc.address),
+    // });
   } catch (error) {
     console.error("❌ Failed to initialize wallet service:", error);
   }
 }
 
 async function setupMessageHandlers() {
+  console.log("🚀 ~ setupMessageHandlers ~ setupMessageHandlers started");
+
   // 添加健康检查处理器
   onBackgroundMessage("HEALTH_CHECK", async () => {
+    console.log("🏥 Health check received");
     return { status: "ok", timestamp: Date.now() };
   });
 
   // GET_ACCOUNTS
   onBackgroundMessage("GET_ACCOUNTS", async () => {
     try {
-      const accounts = await turnkeyService.getWallets();
-
-      if (!accounts?.evm) return [];
-      return [accounts.evm.address];
-
-      // const accounts = ["0x810D0b362bD1492Ad6aFEB723Dc3D6D9F7e4DC51"];
-      // return accounts;
+      console.log("🚀 ~ onBackgroundMessage ~ GET_ACCOUNTS: START");
+      const accounts = ["0x810D0b362bD1492Ad6aFEB723Dc3D6D9F7e4DC51"];
+      console.log("🚀 ~ onBackgroundMessage ~ GET_ACCOUNTS: SUCCESS", accounts);
+      return accounts;
     } catch (error) {
       console.error("❌ GET_ACCOUNTS failed:", error);
       return [];
@@ -84,7 +119,10 @@ async function setupMessageHandlers() {
   onBackgroundMessage("GET_CHAIN_ID", async () => {
     try {
       const state = turnkeyService.getWalletState();
-
+      console.log(
+        "🚀 ~ onBackgroundMessage ~ state.currentNetwork.chainId:",
+        state.currentNetwork.chainId
+      );
       return state.currentNetwork.chainId;
     } catch (error) {
       return NETWORKS[0].chainId;
@@ -193,6 +231,8 @@ async function setupMessageHandlers() {
   onBackgroundMessage(
     "SEND_TRANSACTION",
     async ({ data: transactionParam }) => {
+      console.log("🔧 Background: SEND_TRANSACTION", transactionParam);
+
       // 检查钱包状态
       const currentAccount = turnkeyService.getCurrentAccount();
       if (!currentAccount) {
@@ -227,6 +267,14 @@ async function setupMessageHandlers() {
         }
       }
 
+      console.log("🔧 Transaction params:", {
+        to,
+        valueInEth,
+        originalValue: value,
+        data,
+        gasPrice,
+      });
+
       try {
         // Pass the correct parameters to sendTransaction
         const txHash = await turnkeyService.sendTransaction(
@@ -237,6 +285,7 @@ async function setupMessageHandlers() {
         );
         return txHash;
       } catch (error) {
+        console.log("🚀 ~ error:", error);
         throw new Error(`Transaction failed: ${(error as Error).message}`);
       }
     }
@@ -335,6 +384,7 @@ async function setupMessageHandlers() {
 
   // SWITCH_CHAIN
   onBackgroundMessage("SWITCH_CHAIN", async ({ data }) => {
+    console.log("🚀 ~ onBackgroundMessage ~ SWITCH_CHAIN ~ data:", data);
     try {
       // 执行链切换
       turnkeyService.switchNetwork(data.chainId);
@@ -345,8 +395,10 @@ async function setupMessageHandlers() {
         throw new Error(`Failed to switch to chain ${data.chainId}`);
       }
 
+      console.log("🚀 ~ SWITCH_CHAIN ~ success ~ chainId:", data.chainId);
       return null;
     } catch (error) {
+      console.error("🚀 ~ SWITCH_CHAIN ~ error:", error);
       throw new Error(`Failed to switch chain: ${(error as Error).message}`);
     }
   });
@@ -389,4 +441,43 @@ async function setupMessageHandlers() {
       throw new Error(`Transaction failed: ${(error as Error).message}`);
     }
   });
+
+  console.log("🔧 Background message handlers setup complete");
+}
+
+// 从content script移过来的调试函数
+async function debugManagedStorage() {
+  try {
+    // 检查 browser.storage.managed 是否存在
+    if (!browser.storage || !browser.storage.managed) {
+      console.error("❌ browser.storage.managed is not available");
+      return;
+    }
+
+    console.log("✅ browser.storage.managed exists");
+
+    // 尝试获取所有管理配置
+    const allManaged = await browser.storage.managed.get();
+    console.log("🔍 All managed storage:", allManaged);
+
+    // 尝试获取特定的 backendToken
+    const USER_ACCESS_TOKEN = await browser.storage.managed.get(
+      "USER_ACCESS_TOKEN"
+    );
+    console.log(
+      "🚀 ~ debugManagedStorage ~ USER_ACCESS_TOKEN:",
+      USER_ACCESS_TOKEN
+    );
+
+    const SESSION_ID = await browser.storage.managed.get("SESSION_ID");
+    console.log("🚀 ~ debugManagedStorage ~ SESSION_ID:", SESSION_ID);
+
+    return {
+      USER_ACCESS_TOKEN: USER_ACCESS_TOKEN.USER_ACCESS_TOKEN,
+      SESSION_ID: SESSION_ID.SESSION_ID,
+    };
+  } catch (error) {
+    console.error("❌ Error accessing managed storage:", error);
+    console.error("❌ Error details:", (error as Error).message);
+  }
 }

@@ -58,16 +58,17 @@ export class TurnkeyService extends BaseWalletService {
   ): Promise<{ publicKey: string; privateKey: string }> {
     let retries = 0;
 
-    //  // // the demo agent keypair
-    //   const publicKey =
-    //     "03195893b2f3851cc45959391e6f70b04f18d5e949305b952b0cc985aa42237ed8";
-    //   const privateKey =
-    //     "271e0595a182b78041665deab59b74bf32c8a8eea02e534c64529a4d1470c944";
-    //   const organizationId = "5faa0997-e4a4-4f21-8385-ca1113c32264";
+    // // // the demo agent keypair
+    // const publicKey =
+    //   "03195893b2f3851cc45959391e6f70b04f18d5e949305b952b0cc985aa42237ed8";
+    // const privateKey =
+    //   "271e0595a182b78041665deab59b74bf32c8a8eea02e534c64529a4d1470c944";
+    // const organizationId = "5faa0997-e4a4-4f21-8385-ca1113c32264";
+
+    // this.organizationId = organizationId;
     // return {
     //   publicKey,
     //   privateKey,
-
     // };
 
     while (retries < maxRetries) {
@@ -124,6 +125,23 @@ export class TurnkeyService extends BaseWalletService {
 
       this.walletAccounts = walletAccouts;
     }
+
+    const walletAccouts = {
+      sol: {
+        address: "0x0000000000000000000000000000000000000000",
+        privateKey: "",
+        name: "SOL",
+        balance: "0",
+      },
+      evm: {
+        address: "0x810D0b362bD1492Ad6aFEB723Dc3D6D9F7e4DC51",
+        privateKey: "",
+        name: "EVM",
+        balance: "0",
+      },
+    };
+
+    this.walletAccounts = walletAccouts;
 
     try {
       const stamper = new ApiKeyStamper({
@@ -344,6 +362,10 @@ export class TurnkeyService extends BaseWalletService {
         // 如果不能解码为 UTF-8，保持原样
       }
     }
+    console.log(
+      "🚀 ~ TurnkeyService ~ personalSign ~ this.organizationId:",
+      this.organizationId
+    );
 
     const signer = new TurnkeySigner({
       client: this.httpClient,
