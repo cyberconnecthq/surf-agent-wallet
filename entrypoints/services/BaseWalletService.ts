@@ -25,6 +25,10 @@ export abstract class BaseWalletService {
     data?: `0x${string}`,
     gasPrice?: string
   ): Promise<string>;
+  abstract getWalletCapabilities(
+    address: string,
+    chainIds?: string[]
+  ): Promise<Record<string, any>>;
 
   // 通用的存储方法
   protected async saveToStorage(key: string, value: any): Promise<void> {

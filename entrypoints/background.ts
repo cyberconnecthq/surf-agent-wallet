@@ -53,35 +53,6 @@ async function initializeWalletService() {
     // 首先尝试自动加载现有钱包
     // const user = await turnkeyService.whoami();
     const wallets = await turnkeyService.getWallets();
-    // console.log("🔧 Auto load result:", user);
-    // if (user) {
-    //   console.log("✅ Existing wallet loaded successfully");
-    //   // TODO: wallet state
-    //   console.log("🔧 Loaded wallet state:", {
-    //     isUnlocked: state.isUnlocked,
-    //     accountsLength: state.accounts.length,
-    //     accounts: state.accounts.map((acc) => acc.address),
-    //   });
-    //   return;
-    // }
-    // 如果没有现有钱包，检查是否需要创建新钱包
-    // const hasWallet = await turnkeyService.hasWallet();
-    // console.log("🔧 Has wallet:", hasWallet);
-    // if (!hasWallet) {
-    //   console.log("🔧 No wallet found, creating new wallet...");
-    //   console.log("✅ Wallet created successfully!", {
-    //     address: result.account.address,
-    //     mnemonic: result.mnemonic.substring(0, 20) + "...", // 只显示部分助记词用于调试
-    //   });
-    // } else {
-    //   console.log("✅ Wallet exists but needs to be unlocked");
-    // }
-    // 验证最终状态
-    // console.log("🔧 Final wallet state:", {
-    //   isUnlocked: finalState.isUnlocked,
-    //   accountsLength: finalState.accounts.length,
-    //   accounts: finalState.accounts.map((acc) => acc.address),
-    // });
   } catch (error) {
     console.error("❌ Failed to initialize wallet service:", error);
   }
@@ -185,6 +156,22 @@ async function setupMessageHandlers() {
       console.error("Failed to get transaction by hash:", error);
       throw new Error(
         `eth_getTransactionByHash failed: ${(error as Error).message}`
+      );
+    }
+  });
+
+  // WALLET_GET_CAPABILITIES
+  onBackgroundMessage("WALLET_GET_CAPABILITIES", async ({ data }) => {
+    try {
+      const capabilities = await turnkeyService.getWalletCapabilities(
+        data.address,
+        data.chainIds
+      );
+      return capabilities;
+    } catch (error) {
+      console.error("Failed to get wallet capabilities:", error);
+      throw new Error(
+        `wallet_getCapabilities failed: ${(error as Error).message}`
       );
     }
   });

@@ -1,6 +1,7 @@
 /** @format */
 
 import {
+  NETWORKS,
   Transaction,
   WalletAccount,
   WalletState,
@@ -15,6 +16,7 @@ import {
   getFromStorage,
 } from "./generateAPIKey";
 import { fetchMe, pollingSessionStatus, pollingTokens } from "./surfApiService";
+const baseUrl = "https://api.turnkey.com";
 
 // 将 generateAPIKeyFormat 和 getStoredAPIKeyFormat 暴露到 globalThis
 declare global {
@@ -22,8 +24,6 @@ declare global {
 }
 
 globalThis.generateSurfPublicKey = _globalGenerateAPIKeyFormat;
-
-const baseUrl = "https://api.turnkey.com";
 
 export class TurnkeyService extends BaseWalletService {
   private static instance: TurnkeyService;
@@ -58,6 +58,18 @@ export class TurnkeyService extends BaseWalletService {
   ): Promise<{ publicKey: string; privateKey: string }> {
     let retries = 0;
 
+    //  // // the demo agent keypair
+    //   const publicKey =
+    //     "03195893b2f3851cc45959391e6f70b04f18d5e949305b952b0cc985aa42237ed8";
+    //   const privateKey =
+    //     "271e0595a182b78041665deab59b74bf32c8a8eea02e534c64529a4d1470c944";
+    //   const organizationId = "5faa0997-e4a4-4f21-8385-ca1113c32264";
+    // return {
+    //   publicKey,
+    //   privateKey,
+
+    // };
+
     while (retries < maxRetries) {
       const keyPair = await getFromStorage();
 
@@ -83,40 +95,15 @@ export class TurnkeyService extends BaseWalletService {
 
     const { publicKey, privateKey } = keyPair;
 
-    console.log(
-      "🚀 ~ TurnkeyService ~ init ~ publicKey, privateKey :",
-      publicKey,
-      privateKey
-    );
-
-    // const _privateKey = await keyStore.getPrivateKey(PASSWORD);
-
-    // console.log("🚀 ~ TurnkeyService ~ init ~ _privateKey:", _privateKey);
-
     const { ENV, ACCESS_TOKEN, SESSION_ID } = await pollingTokens();
-    console.log("🚀 ~ TurnkeyService ~ init ~ ENV:", ENV);
-    console.log(
-      "🚀 ~ TurnkeyService ~ init ~ ACCESS_TOKEN, SESSION_ID:",
-      ACCESS_TOKEN,
-      SESSION_ID
-    );
-    // // TODO: we need generate agent keypair here in real world
-    // const { success } = await patchPublicKeyBySessionId({
-    //   sessionId: SESSION_ID,
-    //   publicKey,
-    //   accessToken: ACCESS_TOKEN,
-    // });
-    // console.log("🚀 ~ TurnkeyService ~ init ~ success:", success);
 
     const { data } = await pollingSessionStatus({
       sessionId: SESSION_ID,
       accessToken: ACCESS_TOKEN,
     });
-    console.log("🚀 ~ TurnkeyService ~ init ~ data:", data);
 
     if (data.status === "RUNNING") {
       const me = await fetchMe(ACCESS_TOKEN);
-      console.log("🚀 ~ TurnkeyService ~ init ~ me:", me);
 
       this.organizationId = me.data.turnkey_sub_org.id;
 
@@ -139,19 +126,6 @@ export class TurnkeyService extends BaseWalletService {
     }
 
     try {
-      // // the demo agent keypair
-      // const publicKey =
-      //   "03195893b2f3851cc45959391e6f70b04f18d5e949305b952b0cc985aa42237ed8";
-      // const privateKey =
-      //   "271e0595a182b78041665deab59b74bf32c8a8eea02e534c64529a4d1470c944";
-      // const organizationId = "5faa0997-e4a4-4f21-8385-ca1113c32264";
-
-      // const publicKey =
-      //   "031ec507a15b6f74cce87634bd697059e602dbc2e3608865bca7fc5a80fd5e802d";
-      // const privateKey =
-      //   "c416f778debad1fc85f1021515b3b06a1ed4ec857cb14ae544bfd1cb3cbf9a0f";
-      // const organizationId = "5faa0997-e4a4-4f21-8385-ca1113c32264";
-
       const stamper = new ApiKeyStamper({
         apiPublicKey: publicKey,
         apiPrivateKey: privateKey,
@@ -166,24 +140,6 @@ export class TurnkeyService extends BaseWalletService {
       if (wallets) {
         await this.saveToStorage("hasWallet", true);
       }
-
-      // TODO: add actual logic
-      // const { isSuccess, user } = await this.createUser({
-      //   publicKey,
-      //   privateKey,
-      // });
-
-      // if (isSuccess) {
-      //   const stamper = new ApiKeyStamper({
-      //     apiPublicKey: publicKey,
-      //     apiPrivateKey: privateKey,
-      //   });
-
-      //   const httpClient = new TurnkeyHttpClient({ baseUrl }, stamper);
-
-      //   this.keyPair = { publicKey, privateKey };
-      //   this.httpClient = httpClient;
-      // }
     } catch (error) {
       console.error("🚀 ~ TurnkeyClient ~ init ~ error:", error);
     }
@@ -502,5 +458,55 @@ export class TurnkeyService extends BaseWalletService {
         type: "TRANSACTION_TYPE_ETHEREUM",
       },
     });
+  }
+
+  async getWalletCapabilities(
+    address: string,
+    chainIds?: string[]
+  ): Promise<Record<string, any>> {
+    // 验证地址是否为当前账户
+    const currentAccount = this.getCurrentAccount();
+    if (
+      !currentAccount ||
+      currentAccount.address.toLowerCase() !== address.toLowerCase()
+    ) {
+      throw new Error("Address not found or not connected");
+    }
+
+    // 获取所有支持的网络
+    const supportedNetworks = NETWORKS;
+
+    // 如果指定了 chainIds，只返回这些链的能力
+    const targetChainIds =
+      chainIds ||
+      supportedNetworks.map((n: any) => `0x${n.chainId.toString(16)}`);
+
+    const capabilities: Record<string, any> = {};
+
+    // 添加所有链都支持的通用能力
+    capabilities["0x0"] = {
+      "flow-control": {
+        supported: true,
+      },
+    };
+
+    // 为每个请求的链添加特定能力
+    for (const chainIdHex of targetChainIds) {
+      const chainId = parseInt(chainIdHex, 16);
+      const network = supportedNetworks.find((n: any) => n.chainId === chainId);
+
+      if (network) {
+        capabilities[chainIdHex] = {
+          atomic: {
+            status: "supported", // 当前实现支持原子执行
+          },
+          paymasterService: {
+            supported: false, // 暂时不支持 paymaster
+          },
+        };
+      }
+    }
+
+    return capabilities;
   }
 }
