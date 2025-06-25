@@ -37,6 +37,13 @@ export interface WalletState {
 
 export const NETWORKS: Network[] = [
   {
+    chainId: 8453,
+    name: "Base Mainnet",
+    rpcUrl: "https://developer-access-mainnet.base.org",
+    currency: "ETH",
+    blockExplorerUrl: "https://basescan.org",
+  },
+  {
     chainId: 7560,
     name: "Cyber Mainnet",
     rpcUrl: "https://cyber.alt.technology",
@@ -57,13 +64,7 @@ export const NETWORKS: Network[] = [
     currency: "ETH",
     blockExplorerUrl: "https://etherscan.io",
   },
-  {
-    chainId: 8453,
-    name: "Base Mainnet",
-    rpcUrl: "https://developer-access-mainnet.base.org",
-    currency: "ETH",
-    blockExplorerUrl: "https://basescan.org",
-  },
+
   // {
   //   chainId: 5,
   //   name: "Goerli Testnet",

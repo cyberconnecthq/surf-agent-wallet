@@ -94,9 +94,7 @@ async function initializeWalletService() {
 }
 
 async function setupMessageHandlers() {
-  console.log(
-    "🚀 ~ setupMessageHandlers ~ setupMessageHandlers:🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀��🚀🚀🚀🚀🚀🚀"
-  );
+  console.log("🚀 ~ setupMessageHandlers ~ setupMessageHandlers started");
 
   // 添加健康检查处理器
   onBackgroundMessage("HEALTH_CHECK", async () => {
@@ -196,6 +194,22 @@ async function setupMessageHandlers() {
       console.error("Failed to get transaction by hash:", error);
       throw new Error(
         `eth_getTransactionByHash failed: ${(error as Error).message}`
+      );
+    }
+  });
+
+  // WALLET_GET_CAPABILITIES
+  onBackgroundMessage("WALLET_GET_CAPABILITIES", async ({ data }) => {
+    try {
+      const capabilities = await turnkeyService.getWalletCapabilities(
+        data.address,
+        data.chainIds
+      );
+      return capabilities;
+    } catch (error) {
+      console.error("Failed to get wallet capabilities:", error);
+      throw new Error(
+        `wallet_getCapabilities failed: ${(error as Error).message}`
       );
     }
   });

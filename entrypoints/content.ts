@@ -137,6 +137,12 @@ async function handleWalletRequest(method: string, params: any[] = []) {
     case "wallet_addEthereumChain":
       return await addChain(params[0]);
 
+    case "wallet_getCapabilities":
+      return await getWalletCapabilities(params[0], params[1]);
+
+    case "wallet_getChainId":
+      return await getChainId();
+
     case "eth_call":
       return await ethCall(params[0], params[1]);
 
@@ -151,6 +157,9 @@ async function handleWalletRequest(method: string, params: any[] = []) {
 
     case "eth_getTransactionByHash":
       return await getTransactionByHash(params[0]);
+
+    case "wallet_requestPermissions":
+      return await walletRequestPermissions(params[0]);
 
     default:
       throw new Error(`Unsupported method: ${method}`);
@@ -276,4 +285,28 @@ async function getBlockNumber() {
 
 async function getTransactionByHash(hash: string) {
   return await sendToBackground("ETH_GET_TRANSACTION_BY_HASH", { hash });
+}
+
+async function getWalletCapabilities(address: string, chainIds?: string[]) {
+  return await sendToBackground("WALLET_GET_CAPABILITIES", {
+    address,
+    chainIds,
+  });
+}
+
+async function walletRequestPermissions(requested: any) {
+  // Currently we only support eth_accounts permission
+  if (requested && requested.eth_accounts !== undefined) {
+    await requestAccounts();
+    return [
+      {
+        caveats: [],
+        date: Date.now(),
+        id: Math.floor(Math.random() * 1e6),
+        invoker: window.origin,
+        parentCapability: "eth_accounts",
+      },
+    ];
+  }
+  throw new Error("Unsupported permission request");
 }

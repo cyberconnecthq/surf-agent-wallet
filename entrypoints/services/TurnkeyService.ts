@@ -1,6 +1,7 @@
 /** @format */
 
 import {
+  NETWORKS,
   Transaction,
   WalletAccount,
   WalletState,
@@ -518,5 +519,55 @@ export class TurnkeyService extends BaseWalletService {
         type: "TRANSACTION_TYPE_ETHEREUM",
       },
     });
+  }
+
+  async getWalletCapabilities(
+    address: string,
+    chainIds?: string[]
+  ): Promise<Record<string, any>> {
+    // 验证地址是否为当前账户
+    const currentAccount = this.getCurrentAccount();
+    if (
+      !currentAccount ||
+      currentAccount.address.toLowerCase() !== address.toLowerCase()
+    ) {
+      throw new Error("Address not found or not connected");
+    }
+
+    // 获取所有支持的网络
+    const supportedNetworks = NETWORKS;
+
+    // 如果指定了 chainIds，只返回这些链的能力
+    const targetChainIds =
+      chainIds ||
+      supportedNetworks.map((n: any) => `0x${n.chainId.toString(16)}`);
+
+    const capabilities: Record<string, any> = {};
+
+    // 添加所有链都支持的通用能力
+    capabilities["0x0"] = {
+      "flow-control": {
+        supported: true,
+      },
+    };
+
+    // 为每个请求的链添加特定能力
+    for (const chainIdHex of targetChainIds) {
+      const chainId = parseInt(chainIdHex, 16);
+      const network = supportedNetworks.find((n: any) => n.chainId === chainId);
+
+      if (network) {
+        capabilities[chainIdHex] = {
+          atomic: {
+            status: "supported", // 当前实现支持原子执行
+          },
+          paymasterService: {
+            supported: false, // 暂时不支持 paymaster
+          },
+        };
+      }
+    }
+
+    return capabilities;
   }
 }

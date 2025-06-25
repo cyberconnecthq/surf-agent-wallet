@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import cyberIcon from "../assets/tokens/cyber.png";
 import ethIcon from "../assets/tokens/eth.png";
+import usdcIcon from "../assets/tokens/usdc.png";
+import usdtIcon from "../assets/tokens/usdt.png";
 import "../styles/debug-panel.css";
 
 export default defineContentScript({
@@ -47,7 +49,9 @@ const WalletDebugPanel: React.FC = () => {
     });
     const [tokenBalances, setTokenBalances] = useState<TokenBalance[]>([
         { symbol: "ETH", balance: "Loading...", icon: ethIcon },
-        { symbol: "CYBER", balance: "Loading...", icon: cyberIcon }
+        { symbol: "CYBER", balance: "Loading...", icon: cyberIcon },
+        { symbol: "USDT", balance: "Loading...", icon: usdtIcon },
+        { symbol: "USDC", balance: "Loading...", icon: usdcIcon }
     ]);
     const [isConnected, setIsConnected] = useState<boolean>(false);
     const [connectionStatus, setConnectionStatus] = useState<string>("Checking...");
@@ -151,6 +155,8 @@ const WalletDebugPanel: React.FC = () => {
         }
     }, []);
 
+
+
     // 获取ERC-20代币余额
     const fetchTokenBalance = useCallback(async (address: string, tokenAddress: string, tokenSymbol: string) => {
         try {
@@ -252,6 +258,8 @@ const WalletDebugPanel: React.FC = () => {
 
     // CYBER代币合约地址
     const CYBER_CONTRACT_ADDRESS = "0x14778860E937f509e651192a90589dE711Fb88a9";
+    const BASE_USDT_CONTRACT_ADDRESS = "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2";
+    const BASE_USDC_CONTRACT_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'
 
     // 监听账户响应和账户变化事件
     useEffect(() => {
@@ -281,6 +289,8 @@ const WalletDebugPanel: React.FC = () => {
                         // 地址获取成功后，获取余额
                         fetchEthBalance(address);
                         fetchTokenBalance(address, CYBER_CONTRACT_ADDRESS, "CYBER");
+                        fetchTokenBalance(address, BASE_USDT_CONTRACT_ADDRESS, "USDT");
+                        fetchTokenBalance(address, BASE_USDC_CONTRACT_ADDRESS, "USDC");
                     } else {
                         setCurrentAddress("No account found");
                         setIsConnected(false);
@@ -334,6 +344,44 @@ const WalletDebugPanel: React.FC = () => {
                         ));
                     }
                 }
+                // 处理USDT代币余额响应
+                if (messageId && messageId.startsWith("debug-panel-get-usdt-balance-")) {
+                    if (result) {
+                        const cyberBalance = hexToTokenBalance(result, 6); // CYBER有18位小数
+                        console.log("🚀 ~ handleMessage ~ cyberBalance:", cyberBalance)
+                        setTokenBalances(prev => prev.map(token =>
+                            token.symbol === "USDT"
+                                ? { ...token, balance: cyberBalance }
+                                : token
+                        ));
+                    } else if (error) {
+                        console.error("USDT balance error:", error);
+                        setTokenBalances(prev => prev.map(token =>
+                            token.symbol === "USDT"
+                                ? { ...token, balance: "Error" }
+                                : token
+                        ));
+                    }
+                }
+                // 处理USDC代币余额响应
+                if (messageId && messageId.startsWith("debug-panel-get-usdc-balance-")) {
+                    if (result) {
+                        const cyberBalance = hexToTokenBalance(result, 6); // CYBER有18位小数
+                        console.log("🚀 ~ handleMessage ~ cyberBalance:", cyberBalance)
+                        setTokenBalances(prev => prev.map(token =>
+                            token.symbol === "USDC"
+                                ? { ...token, balance: cyberBalance }
+                                : token
+                        ));
+                    } else if (error) {
+                        console.error("USDC balance error:", error);
+                        setTokenBalances(prev => prev.map(token =>
+                            token.symbol === "USDC"
+                                ? { ...token, balance: "Error" }
+                                : token
+                        ));
+                    }
+                }
             }
 
             // 监听账户变化事件
@@ -346,6 +394,8 @@ const WalletDebugPanel: React.FC = () => {
                     setConnectionStatus("Connected");
                     fetchEthBalance(address);
                     fetchTokenBalance(address, CYBER_CONTRACT_ADDRESS, "CYBER");
+                    fetchTokenBalance(address, BASE_USDT_CONTRACT_ADDRESS, "USDT");
+                    fetchTokenBalance(address, BASE_USDC_CONTRACT_ADDRESS, "USDC");
                 } else {
                     setCurrentAddress("No account found");
                     setIsConnected(false);
@@ -365,7 +415,7 @@ const WalletDebugPanel: React.FC = () => {
                     // 网络变化时重新获取余额
                     if (currentAddress && currentAddress !== "Loading..." && currentAddress !== "No account found") {
                         fetchEthBalance(currentAddress);
-                        fetchTokenBalance(currentAddress, CYBER_CONTRACT_ADDRESS, "CYBER");
+
                     }
                 }
             }
@@ -426,6 +476,11 @@ const WalletDebugPanel: React.FC = () => {
 
     const updateCall = useCallback(
         (messageId: string, result?: any, error?: string) => {
+            // Filter out "not support" errors
+            if (error && error.toLowerCase().includes("supported")) {
+                return;
+            }
+
             setCalls((prevCalls) => {
                 const call = prevCalls.get(messageId);
                 if (call) {
@@ -599,7 +654,7 @@ const WalletDebugPanel: React.FC = () => {
                         Name: {networkInfo.chainName}
                     </span>
                 </div>
-                <div className="wallet-status">
+                {/* <div className="wallet-status">
                     <span className="title" style={{
                         marginTop: 4
                     }}>
@@ -615,14 +670,14 @@ const WalletDebugPanel: React.FC = () => {
                     }}>
                         {currentAddress}
                     </span>
-                </div>
+                </div> */}
 
                 {/* <div className="divider" /> */}
                 <div className="wallet-status">
                     <span className="title" >
                         Token Balance
                     </span>
-                    {tokenBalances.map((token) => (
+                    {tokenBalances.map((token) => Number(token.balance) > 0 && (
                         <div key={token.symbol} className="token-item">
                             <div className="token">
                                 <img src={token.icon} />
@@ -646,6 +701,9 @@ const WalletDebugPanel: React.FC = () => {
                 </div> */}
             </div>
             <div className="wallet-debug-calls">
+                <span className="title" >
+                    Function call
+                </span>
                 {calls.size === 0 ? (
                     <div className="wallet-debug-empty">No calls yet</div>
                 ) : (

@@ -20,6 +20,10 @@ export interface WalletProtocolMap {
   SIGN_TYPED_DATA(data: { address: string; typedData: any }): string;
   SWITCH_CHAIN(data: { chainId: number }): null;
   ADD_CHAIN(chainParam: any): any;
+  WALLET_GET_CAPABILITIES(data: {
+    address: string;
+    chainIds?: string[];
+  }): Record<string, any>;
 
   // Popup相关消息
   GET_WALLET_STATE(): any;
