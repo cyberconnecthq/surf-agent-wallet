@@ -1,0 +1,174 @@
+/* Surf Design System - Color Palette
+ * 基础调色板，定义所有原始颜色值
+ * 这些颜色值直接来自Figma设计系统
+ */
+
+:root {
+  /* === 品牌核心色彩 === */
+  --palette-surf-brand: #ff2882;
+  --palette-surf-gav: #00d0c9;
+  --palette-surf-gold: #faad14;
+  --palette-surf-light-gold: #fff1b8;
+  --palette-surf-orange: #ff7824;
+  --palette-surf-pink: #e44ab6;
+  --palette-surf-purple: #7458ff;
+  --palette-surf-red: #e11d48;
+  --palette-surf-blue: #1677ff;
+  --palette-surf-green: #00c548;
+  --palette-surf-alpha-blue: #00a6ff;
+
+  /* === 基础色彩 === */
+  --palette-white: #ffffff;
+  --palette-black: #000000;
+
+  /* === 灰度色彩 === */
+  --palette-gray-50: #f5f4f4;
+  --palette-gray-100: #d8d8d8;
+  --palette-gray-300: #aaaaaa;
+  --palette-gray-500: #7a7a7a;
+  --palette-gray-700: #5b5b5b;
+  --palette-gray-900: #1b1b1b;
+
+  /* === 语义颜色 === */
+  --palette-error-light: #e75172;
+  --palette-error-dark: #e11d48;
+  --palette-success-light: #44bc70;
+  --palette-success-dark: #00ff66;
+  --palette-info-light: #49b1e8;
+  --palette-info-dark: #00a6ff;
+  --palette-warning-light: #dec378;
+
+  /* === 标签颜色 (与Figma token一致) === */
+  /* Orange Tag Colors */
+  --palette-tag-orange-text: #b8a08e;
+  --palette-tag-orange-icon: #b8a08e;
+  --palette-tag-orange-border: #b8a08e;
+  --palette-tag-orange-bg: rgba(184, 160, 142, 0.1);
+  --palette-tag-orange-bg-hover: rgba(184, 160, 142, 0.3);
+
+  /* Neutral Tag Colors */
+  --palette-tag-neutral-text: #7a7a7a;
+  --palette-tag-neutral-icon: #7a7a7a;
+  --palette-tag-neutral-border: rgba(42, 42, 42, 0.06);
+  --palette-tag-neutral-bg: rgba(42, 42, 42, 0.06);
+  --palette-tag-neutral-bg-hover: rgba(42, 42, 42, 0.1);
+
+  /* Blue Tag Colors */
+  --palette-tag-blue-text: #5bb5ff;
+  --palette-tag-blue-icon: #5bb5ff;
+  --palette-tag-blue-border: rgba(91, 181, 255, 0.1);
+  --palette-tag-blue-bg: rgba(91, 181, 255, 0.1);
+  --palette-tag-blue-bg-hover: rgba(91, 181, 255, 0.3);
+
+  /* Purple Tag Colors */
+  --palette-tag-purple-text: #908eb8;
+  --palette-tag-purple-icon: #908eb8;
+  --palette-tag-purple-border: rgba(144, 142, 184, 0.1);
+  --palette-tag-purple-bg: rgba(144, 142, 184, 0.1);
+  --palette-tag-purple-bg-hover: rgba(144, 142, 184, 0.3);
+
+  /* Gold/Yellow Tag Colors */
+  --palette-tag-gold-text: #dec378;
+  --palette-tag-gold-icon: #dec378;
+  --palette-tag-gold-border: rgba(222, 195, 120, 0.1);
+  --palette-tag-gold-bg: rgba(222, 195, 120, 0.1);
+  --palette-tag-gold-bg-hover: rgba(222, 195, 120, 0.3);
+
+  /* Pink Tag Colors */
+  --palette-tag-pink-text: #b88ea7;
+  --palette-tag-pink-icon: #b88ea7;
+  --palette-tag-pink-border: rgba(184, 142, 167, 0.3);
+  --palette-tag-pink-bg: rgba(184, 142, 167, 0.1);
+  --palette-tag-pink-hover: rgba(184, 142, 167, 0.1);
+
+  /* Cyan Tag Colors */
+  --palette-tag-cyan-text: #74ada4;
+  --palette-tag-cyan-icon: #74ada4;
+  --palette-tag-cyan-border: rgba(116, 173, 164, 0.1);
+  --palette-tag-cyan-bg: rgba(116, 173, 164, 0.1);
+  --palette-tag-cyan-hover: rgba(116, 173, 164, 0.3);
+
+  /* === 数据可视化颜色 === */
+  --palette-data-green: #44bc70;
+  --palette-data-red: #e75172;
+  --palette-data-blue: #49b1e8;
+  --palette-data-purple: #8876e4;
+  --palette-data-branding: #fc62a2;
+
+  /* === 数据可视化颜色 (Dark Mode) === */
+  --palette-data-green-dark: #00ff66;
+  --palette-data-red-dark: #e11d48;
+  --palette-data-blue-dark: #00a6ff;
+  --palette-data-purple-dark: #7458ff;
+  --palette-data-branding-dark: #ff2882;
+
+  /* === 透明度变量 === */
+  --palette-alpha-04: 0.04;
+  --palette-alpha-06: 0.06;
+  --palette-alpha-08: 0.08;
+  --palette-alpha-10: 0.1;
+  --palette-alpha-12: 0.12;
+  --palette-alpha-30: 0.3;
+  --palette-alpha-60: 0.6;
+  --palette-alpha-80: 0.8;
+  --palette-alpha-88: 0.88;
+
+  /* === 背景色透明组合 === */
+  --palette-bg-subtle: rgba(42, 42, 42, 0.04);
+  --palette-bg-subtle-hover: rgba(42, 42, 42, 0.06);
+  --palette-bg-base: rgba(255, 255, 255, 0.88);
+  --palette-bg-base-hover: rgba(42, 42, 42, 0.04);
+
+  /* === 前景色 === */
+  --palette-fg-base: #1b1b1b;
+  --palette-fg-subtle: #5b5b5b;
+  --palette-fg-muted: #aaaaaa;
+  --palette-fg-disabled: #d8d8d8;
+  --palette-fg-error: #e75172;
+
+  /* === 边框色透明组合 === */
+  --palette-border-base: rgba(42, 42, 42, 0.04);
+  --palette-border-strong: rgba(42, 42, 42, 0.08);
+  --palette-border-error: #e75172;
+  --palette-border-danger: rgba(231, 81, 114, 0.6);
+
+  --switch-bg-unchecked: linear-gradient(
+    180deg,
+    #484e56 17.71%,
+    #3b4048 90.44%
+  );
+}
+
+/* === Dark Mode Palette === */
+.dark {
+  /* === 背景色透明组合 (Dark) === */
+  --palette-bg-subtle: rgba(255, 255, 255, 0.04);
+  --palette-bg-subtle-hover: rgba(255, 255, 255, 0.12);
+  --palette-bg-base: rgba(42, 42, 42, 0.8);
+  --palette-bg-base-hover: rgba(255, 255, 255, 0.04);
+
+  /* === 前景色 (Dark) === */
+  --palette-fg-base: #f5f4f4;
+  --palette-fg-subtle: #aaaaaa;
+  --palette-fg-muted: #7a7a7a;
+  --palette-fg-disabled: #5b5b5b;
+  --palette-fg-error: #e11d48;
+
+  /* === 边框色透明组合 (Dark) === */
+  --palette-border-base: rgba(255, 255, 255, 0.04);
+  --palette-border-strong: rgba(255, 255, 255, 0.08);
+  --palette-border-error: #e11d48;
+  --palette-border-danger: #e11d48;
+
+  /* === 标签颜色 (Dark Mode) === */
+  --palette-tag-neutral-border: rgba(255, 255, 255, 0.06);
+  --palette-tag-neutral-bg: rgba(255, 255, 255, 0.06);
+  --palette-tag-neutral-bg-hover: rgba(255, 255, 255, 0.1);
+
+  /* === 数据可视化颜色 (Dark) === */
+  --palette-data-green: var(--palette-data-green-dark);
+  --palette-data-red: var(--palette-data-red-dark);
+  --palette-data-blue: var(--palette-data-blue-dark);
+  --palette-data-purple: var(--palette-data-purple-dark);
+  --palette-data-branding: var(--palette-data-branding-dark);
+}

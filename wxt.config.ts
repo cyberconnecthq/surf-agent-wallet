@@ -1,5 +1,6 @@
 /** @format */
 
+import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "wxt";
 
 // See https://wxt.dev/api/config.html
@@ -24,6 +25,7 @@ export default defineConfig({
     key: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoqej0j7trLVPp+7AqO9fbY/PYjvRTqJ0plbtXW0X712b5ujIHyBz74p3febX1NN6jQ/DjrHf4KSvE9Jos+9CP6dNaHL5pDUteezi4kECWQwoco9zwua79YsLA0Ntp+jqaOh0Xm519jDMP8OWzG/aE6cj4ARui4iNioAx4DHn8yWNhtC3TOkEfY6+RcBGEUjprTz6rwUWGG3udy/FhgbFxhYgrbVDC0/KR74OZ5uihRhQEIw93gOUY97gCpO3q3EXa9T13yMIzlGSsBTvpVJgVQHYiJzJOtvUempFEY49WIqR5a+qhF8DbnTG/KLGFoB0UpiGMjvA7Zq8exutXlK6MQIDAQAB",
   },
   vite: () => ({
+    plugins: [tailwindcss()],
     define: {
       global: "globalThis",
       process: JSON.stringify({

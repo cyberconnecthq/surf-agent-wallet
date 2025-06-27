@@ -1,0 +1,288 @@
+/** @format */
+
+@import "tailwindcss" prefix(surf);
+@import "./palette.css";
+
+@theme inline {
+  --color-background: var(--surf-background);
+  --color-foreground: var(--surf-foreground);
+  --font-sans: var(--font-openrunde);
+  --font-mono: var(--font-geist-mono);
+
+  /* === Figma Design System - Background Tokens === */
+  --color-bg-subtle: var(--surf-bg-subtle);
+  --color-bg-subtle-hover: var(--surf-bg-subtle-hover);
+  --color-bg-base: var(--surf-bg-base);
+  --color-bg-base-hover: var(--surf-bg-base-hover);
+
+  /* === Figma Design System - Foreground Tokens === */
+  --color-fg-base: var(--surf-fg-base);
+  --color-fg-subtle: var(--surf-fg-subtle);
+  --color-fg-muted: var(--surf-fg-muted);
+  --color-fg-disabled: var(--surf-fg-disabled);
+  --color-fg-error: var(--surf-fg-error);
+
+  /* === Figma Design System - Border Tokens === */
+  --color-border-base: var(--surf-border-base);
+  --color-border-strong: var(--surf-border-strong);
+  --color-border-error: var(--surf-border-error);
+  --color-border-danger: var(--surf-border-danger);
+
+  /* === Figma Design System - Tag Tokens === */
+  /* Tag Orange */
+  --color-tag-orange-text: var(--surf-tag-orange-text);
+  --color-tag-orange-icon: var(--surf-tag-orange-icon);
+  --color-tag-orange-border: var(--surf-tag-orange-border);
+  --color-tag-orange-bg: var(--surf-tag-orange-bg);
+  --color-tag-orange-bg-hover: var(--surf-tag-orange-bg-hover);
+
+  /* Tag Neutral */
+  --color-tag-neutral-text: var(--surf-tag-neutral-text);
+  --color-tag-neutral-icon: var(--surf-tag-neutral-icon);
+  --color-tag-neutral-border: var(--surf-tag-neutral-border);
+  --color-tag-neutral-bg: var(--surf-tag-neutral-bg);
+  --color-tag-neutral-bg-hover: var(--surf-tag-neutral-bg-hover);
+
+  /* Tag Blue */
+  --color-tag-blue-text: var(--surf-tag-blue-text);
+  --color-tag-blue-icon: var(--surf-tag-blue-icon);
+  --color-tag-blue-border: var(--surf-tag-blue-border);
+  --color-tag-blue-bg: var(--surf-tag-blue-bg);
+  --color-tag-blue-bg-hover: var(--surf-tag-blue-bg-hover);
+
+  /* Tag Purple */
+  --color-tag-purple-text: var(--surf-tag-purple-text);
+  --color-tag-purple-icon: var(--surf-tag-purple-icon);
+  --color-tag-purple-border: var(--surf-tag-purple-border);
+  --color-tag-purple-bg: var(--surf-tag-purple-bg);
+  --color-tag-purple-bg-hover: var(--surf-tag-purple-bg-hover);
+
+  /* Tag Gold/Yellow */
+  --color-tag-gold-text: var(--surf-tag-gold-text);
+  --color-tag-gold-icon: var(--surf-tag-gold-icon);
+  --color-tag-gold-border: var(--surf-tag-gold-border);
+  --color-tag-gold-bg: var(--surf-tag-gold-bg);
+  --color-tag-gold-bg-hover: var(--surf-tag-gold-bg-hover);
+
+  /* Tag Pink */
+  --color-tag-pink-text: var(--surf-tag-pink-text);
+  --color-tag-pink-icon: var(--surf-tag-pink-icon);
+  --color-tag-pink-border: var(--surf-tag-pink-border);
+  --color-tag-pink-bg: var(--surf-tag-pink-bg);
+  --color-tag-pink-hover: var(--surf-tag-pink-hover);
+
+  /* Tag Cyan */
+  --color-tag-cyan-text: var(--surf-tag-cyan-text);
+  --color-tag-cyan-icon: var(--surf-tag-cyan-icon);
+  --color-tag-cyan-border: var(--surf-tag-cyan-border);
+  --color-tag-cyan-bg: var(--surf-tag-cyan-bg);
+  --color-tag-cyan-hover: var(--surf-tag-cyan-hover);
+
+  /* === Figma Design System - Data Tokens === */
+  --color-data-green: var(--surf-data-green);
+  --color-data-red: var(--surf-data-red);
+  --color-data-blue: var(--surf-data-blue);
+  --color-data-purple: var(--surf-data-purple);
+  --color-data-branding: var(--surf-data-branding);
+
+  /* === Legacy color mappings (for backward compatibility) === */
+  --color-border: var(--surf-border-base);
+  --color-input: var(--surf-bg-base);
+  --color-ring: var(--surf-border-strong);
+  --color-muted: var(--surf-bg-subtle);
+  --color-muted-foreground: var(--surf-fg-muted);
+  --color-secondary: var(--surf-bg-subtle);
+  --color-secondary-foreground: var(--surf-fg-subtle);
+  --color-accent: var(--surf-bg-subtle-hover);
+  --color-accent-foreground: var(--surf-fg-base);
+  --color-destructive: var(--surf-fg-error);
+  --color-primary: var(--surf-fg-base);
+  --color-primary-foreground: var(--surf-background);
+  --color-card: var(--surf-bg-base);
+  --color-card-foreground: var(--surf-fg-base);
+  --color-popover: var(--surf-bg-base);
+  --color-popover-foreground: var(--surf-fg-base);
+
+  /* Sidebar colors */
+  --color-sidebar: var(--surf-bg-base);
+  --color-sidebar-foreground: var(--surf-fg-base);
+  --color-sidebar-primary: var(--surf-fg-base);
+  --color-sidebar-primary-foreground: var(--surf-background);
+  --color-sidebar-accent: var(--surf-bg-subtle);
+  --color-sidebar-accent-foreground: var(--surf-fg-base);
+  --color-sidebar-border: var(--surf-border-base);
+  --color-sidebar-ring: var(--surf-border-strong);
+
+  /* Chart colors */
+  --color-chart-1: var(--surf-data-branding);
+  --color-chart-2: var(--surf-data-blue);
+  --color-chart-3: var(--surf-data-purple);
+  --color-chart-4: var(--surf-data-green);
+  --color-chart-5: var(--surf-data-red);
+
+  /* Brand colors */
+  --color-brand: var(--surf-brand);
+  --color-gav: var(--surf-gav);
+  --color-gold: var(--surf-gold);
+  --color-light-gold: var(--surf-light-gold);
+  --color-orange: var(--surf-orange);
+  --color-pink: var(--surf-pink);
+  --color-purple: var(--surf-purple);
+  --color-red: var(--surf-red);
+  --color-blue: var(--surf-blue);
+  --color-green: var(--surf-green);
+  --color-alpha-blue: var(--surf-alpha-blue);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) + 6px);
+
+  --color-success: var(--palette-success-dark);
+}
+
+@theme {
+  --font-inter: var(--font-inter);
+  --font-openrunde: var(--font-openrunde);
+  --font-menlo: var(--font-menlo);
+}
+
+/* === Surf Design System Theme Tokens === */
+/* 使用调色板变量定义语义化的theme token */
+
+:root {
+  /* Design system radius */
+  --radius: 8px;
+
+  /* === 品牌色彩 Token === */
+  --surf-brand: var(--palette-surf-brand);
+  --surf-foreground: var(--palette-fg-base);
+  --surf-background: var(--palette-white);
+  --surf-gav: var(--palette-surf-gav);
+  --surf-gold: var(--palette-surf-gold);
+  --surf-light-gold: var(--palette-surf-light-gold);
+  --surf-orange: var(--palette-surf-orange);
+  --surf-pink: var(--palette-surf-pink);
+  --surf-purple: var(--palette-surf-purple);
+  --surf-red: var(--palette-surf-red);
+  --surf-blue: var(--palette-surf-blue);
+  --surf-green: var(--palette-surf-green);
+  --surf-alpha-blue: var(--palette-surf-alpha-blue);
+
+  /* === backgrounds/* tokens === */
+  --surf-bg-subtle: var(--palette-bg-subtle);
+  --surf-bg-subtle-hover: var(--palette-bg-subtle-hover);
+  --surf-bg-base: var(--palette-bg-base);
+  --surf-bg-base-hover: var(--palette-bg-base-hover);
+  /* --surf-bg-success: var(--palette-success-dark); */
+
+  /* === foregrounds/* tokens === */
+  --surf-fg-base: var(--palette-fg-base);
+  --surf-fg-subtle: var(--palette-fg-subtle);
+  --surf-fg-muted: var(--palette-fg-muted);
+  --surf-fg-disabled: var(--palette-fg-disabled);
+  --surf-fg-error: var(--palette-fg-error);
+
+  /* === borders/* tokens === */
+  --surf-border-base: var(--palette-border-base);
+  --surf-border-strong: var(--palette-border-strong);
+  --surf-border-error: var(--palette-border-error);
+  --surf-border-danger: var(--palette-border-danger);
+  /* --surf-border-success: var(--palette-success-dark); */
+
+  /* === tag/orange/* tokens === */
+  --surf-tag-orange-text: var(--palette-tag-orange-text);
+  --surf-tag-orange-icon: var(--palette-tag-orange-icon);
+  --surf-tag-orange-border: var(--palette-tag-orange-border);
+  --surf-tag-orange-bg: var(--palette-tag-orange-bg);
+  --surf-tag-orange-bg-hover: var(--palette-tag-orange-bg-hover);
+
+  /* === tag/neutral/* tokens === */
+  --surf-tag-neutral-text: var(--palette-tag-neutral-text);
+  --surf-tag-neutral-icon: var(--palette-tag-neutral-icon);
+  --surf-tag-neutral-border: var(--palette-tag-neutral-border);
+  --surf-tag-neutral-bg: var(--palette-tag-neutral-bg);
+  --surf-tag-neutral-bg-hover: var(--palette-tag-neutral-bg-hover);
+
+  /* === tag/blue/* tokens === */
+  --surf-tag-blue-text: var(--palette-tag-blue-text);
+  --surf-tag-blue-icon: var(--palette-tag-blue-icon);
+  --surf-tag-blue-border: var(--palette-tag-blue-border);
+  --surf-tag-blue-bg: var(--palette-tag-blue-bg);
+  --surf-tag-blue-bg-hover: var(--palette-tag-blue-bg-hover);
+
+  /* === tag/purple/* tokens === */
+  --surf-tag-purple-text: var(--palette-tag-purple-text);
+  --surf-tag-purple-icon: var(--palette-tag-purple-icon);
+  --surf-tag-purple-border: var(--palette-tag-purple-border);
+  --surf-tag-purple-bg: var(--palette-tag-purple-bg);
+  --surf-tag-purple-bg-hover: var(--palette-tag-purple-bg-hover);
+
+  /* === tag/yellow/* (gold) tokens === */
+  --surf-tag-gold-text: var(--palette-tag-gold-text);
+  --surf-tag-gold-icon: var(--palette-tag-gold-icon);
+  --surf-tag-gold-border: var(--palette-tag-gold-border);
+  --surf-tag-gold-bg: var(--palette-tag-gold-bg);
+  --surf-tag-gold-bg-hover: var(--palette-tag-gold-bg-hover);
+
+  /* === tag/pink/* tokens === */
+  --surf-tag-pink-text: var(--palette-tag-pink-text);
+  --surf-tag-pink-icon: var(--palette-tag-pink-icon);
+  --surf-tag-pink-border: var(--palette-tag-pink-border);
+  --surf-tag-pink-bg: var(--palette-tag-pink-bg);
+  --surf-tag-pink-hover: var(--palette-tag-pink-hover);
+
+  /* === tag/Cyan/* tokens === */
+  --surf-tag-cyan-text: var(--palette-tag-cyan-text);
+  --surf-tag-cyan-icon: var(--palette-tag-cyan-icon);
+  --surf-tag-cyan-border: var(--palette-tag-cyan-border);
+  --surf-tag-cyan-bg: var(--palette-tag-cyan-bg);
+  --surf-tag-cyan-hover: var(--palette-tag-cyan-hover);
+
+  /* === data/* tokens === */
+  --surf-data-green: var(--palette-data-green);
+  --surf-data-red: var(--palette-data-red);
+  --surf-data-blue: var(--palette-data-blue);
+  --surf-data-purple: var(--palette-data-purple);
+  --surf-data-branding: var(--palette-data-branding);
+
+  /* === Typography from design system === */
+}
+
+/* === Dark Mode Theme Tokens === */
+.dark {
+  /* === 品牌色彩 Dark Token === */
+  --surf-foreground: var(--palette-fg-base);
+  --surf-background: var(--palette-bg-base);
+
+  /* === backgrounds/* Dark tokens === */
+  --surf-bg-subtle: var(--palette-bg-subtle);
+  --surf-bg-subtle-hover: var(--palette-bg-subtle-hover);
+  --surf-bg-base: var(--palette-bg-base);
+  --surf-bg-base-hover: var(--palette-bg-base-hover);
+
+  /* === foregrounds/* Dark tokens === */
+  --surf-fg-base: var(--palette-fg-base);
+  --surf-fg-subtle: var(--palette-fg-subtle);
+  --surf-fg-muted: var(--palette-fg-muted);
+  --surf-fg-disabled: var(--palette-fg-disabled);
+  --surf-fg-error: var(--palette-fg-error);
+
+  /* === borders/* Dark tokens === */
+  --surf-border-base: var(--palette-border-base);
+  --surf-border-strong: var(--palette-border-strong);
+  --surf-border-error: var(--palette-border-error);
+  --surf-border-danger: var(--palette-border-danger);
+
+  /* === tag/neutral/* Dark tokens === */
+  --surf-tag-neutral-border: var(--palette-tag-neutral-border);
+  --surf-tag-neutral-bg: var(--palette-tag-neutral-bg);
+  --surf-tag-neutral-bg-hover: var(--palette-tag-neutral-bg-hover);
+
+  /* === data/* Dark tokens === */
+  --surf-data-green: var(--palette-data-green);
+  --surf-data-red: var(--palette-data-red);
+  --surf-data-blue: var(--palette-data-blue);
+  --surf-data-purple: var(--palette-data-purple);
+  --surf-data-branding: var(--palette-data-branding);
+}
