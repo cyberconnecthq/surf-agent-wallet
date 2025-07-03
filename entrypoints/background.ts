@@ -105,10 +105,13 @@ async function setupMessageHandlers() {
   // GET_ACCOUNTS
   onBackgroundMessage("GET_ACCOUNTS", async () => {
     try {
-      console.log("🚀 ~ onBackgroundMessage ~ GET_ACCOUNTS: START");
-      const accounts = ["0x810D0b362bD1492Ad6aFEB723Dc3D6D9F7e4DC51"];
-      console.log("🚀 ~ onBackgroundMessage ~ GET_ACCOUNTS: SUCCESS", accounts);
-      return accounts;
+      const state = await turnkeyService.getWallets();
+
+      if (!state?.evm.address) {
+        return [];
+      }
+
+      return [state.evm.address];
     } catch (error) {
       console.error("❌ GET_ACCOUNTS failed:", error);
       return [];

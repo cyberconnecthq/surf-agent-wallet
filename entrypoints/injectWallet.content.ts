@@ -295,6 +295,8 @@ function injectEthereumProvider(fullyActivate = true) {
   }
 
   try {
+    // 让属性保持可重新定义（configurable: true），以便在需要时可再次注入或升级
+    // 避免后续注入阶段出现 "Cannot redefine property: ethereum" 的错误
     Object.defineProperty(window, "ethereum", {
       value: ethereum,
       writable: false,

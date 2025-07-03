@@ -15,6 +15,7 @@ import {
   globalGenerateAPIKeyFormat as _globalGenerateAPIKeyFormat,
   getFromStorage,
 } from "./generateAPIKey";
+import { fetchMe, pollingSessionStatus, pollingTokens } from "./surfApiService";
 const baseUrl = "https://api.turnkey.com";
 
 // 将 generateAPIKeyFormat 和 getStoredAPIKeyFormat 暴露到 globalThis
@@ -57,18 +58,18 @@ export class TurnkeyService extends BaseWalletService {
   ): Promise<{ publicKey: string; privateKey: string }> {
     let retries = 0;
 
-    // // the demo agent keypair
-    const publicKey =
-      "03195893b2f3851cc45959391e6f70b04f18d5e949305b952b0cc985aa42237ed8";
-    const privateKey =
-      "271e0595a182b78041665deab59b74bf32c8a8eea02e534c64529a4d1470c944";
-    const organizationId = "5faa0997-e4a4-4f21-8385-ca1113c32264";
+    // // // the demo agent keypair
+    // const publicKey =
+    //   "03195893b2f3851cc45959391e6f70b04f18d5e949305b952b0cc985aa42237ed8";
+    // const privateKey =
+    //   "271e0595a182b78041665deab59b74bf32c8a8eea02e534c64529a4d1470c944";
+    // const organizationId = "5faa0997-e4a4-4f21-8385-ca1113c32264";
 
-    this.organizationId = organizationId;
-    return {
-      publicKey,
-      privateKey,
-    };
+    // this.organizationId = organizationId;
+    // return {
+    //   publicKey,
+    //   privateKey,
+    // };
 
     while (retries < maxRetries) {
       const keyPair = await getFromStorage();
@@ -95,52 +96,52 @@ export class TurnkeyService extends BaseWalletService {
 
     const { publicKey, privateKey } = keyPair;
 
-    // const { ENV, ACCESS_TOKEN, SESSION_ID } = await pollingTokens();
+    const { ENV, ACCESS_TOKEN, SESSION_ID } = await pollingTokens();
 
-    // const { data } = await pollingSessionStatus({
-    //   sessionId: SESSION_ID,
-    //   accessToken: ACCESS_TOKEN,
-    // });
+    const { data } = await pollingSessionStatus({
+      sessionId: SESSION_ID,
+      accessToken: ACCESS_TOKEN,
+    });
 
-    // if (data.status === "RUNNING") {
-    //   const me = await fetchMe(ACCESS_TOKEN);
+    if (data.status === "RUNNING") {
+      const me = await fetchMe(ACCESS_TOKEN);
 
-    //   this.organizationId = me.data.turnkey_sub_org.id;
+      this.organizationId = me.data.turnkey_sub_org.id;
 
-    //   const walletAccouts = {
-    //     sol: {
-    //       address: me.data.turnkey_sub_org.default_sol_addr || "",
-    //       privateKey: "",
-    //       name: "SOL",
-    //       balance: "0",
-    //     },
-    //     evm: {
-    //       address: me.data.turnkey_sub_org.default_eth_addr || "",
-    //       privateKey: "",
-    //       name: "EVM",
-    //       balance: "0",
-    //     },
-    //   };
+      const walletAccouts = {
+        sol: {
+          address: me.data.turnkey_sub_org.default_sol_addr || "",
+          privateKey: "",
+          name: "SOL",
+          balance: "0",
+        },
+        evm: {
+          address: me.data.turnkey_sub_org.default_eth_addr || "",
+          privateKey: "",
+          name: "EVM",
+          balance: "0",
+        },
+      };
 
-    //   this.walletAccounts = walletAccouts;
-    // }
+      this.walletAccounts = walletAccouts;
+    }
 
-    const walletAccouts = {
-      sol: {
-        address: "0x0000000000000000000000000000000000000000",
-        privateKey: "",
-        name: "SOL",
-        balance: "0",
-      },
-      evm: {
-        address: "0x810D0b362bD1492Ad6aFEB723Dc3D6D9F7e4DC51",
-        privateKey: "",
-        name: "EVM",
-        balance: "0",
-      },
-    };
+    // const walletAccouts = {
+    //   sol: {
+    //     address: "0x0000000000000000000000000000000000000000",
+    //     privateKey: "",
+    //     name: "SOL",
+    //     balance: "0",
+    //   },
+    //   evm: {
+    //     address: "0x810D0b362bD1492Ad6aFEB723Dc3D6D9F7e4DC51",
+    //     privateKey: "",
+    //     name: "EVM",
+    //     balance: "0",
+    //   },
+    // };
 
-    this.walletAccounts = walletAccouts;
+    // this.walletAccounts = walletAccouts;
 
     try {
       const stamper = new ApiKeyStamper({

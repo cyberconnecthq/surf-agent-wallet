@@ -20,49 +20,55 @@ function createDebugPanel() {
 
     const insertPanel = () => {
         const body = document.body;
-        const originalBodyDisplay = body.style.display || '';
-        const originalBodyFlexDirection = body.style.flexDirection || '';
 
-        const mainContent = document.createElement("div");
-        mainContent.id = "surf-wallet-main-content";
-        mainContent.style.flex = "1";
-        mainContent.style.minWidth = "0";
-        mainContent.style.overflow = "auto";
+        // Preserve the original inline styles so we can restore them later
+        const originalMarginRight = body.style.marginRight || "";
 
-        const existingChildren = Array.from(body.children);
-        existingChildren.forEach(child => {
-            mainContent.appendChild(child);
-        });
+        // 1. Inject a <style> tag that shifts the page content to the left
+        const styleElementId = "surf-wallet-debug-panel-style";
+        let styleElement = document.getElementById(styleElementId) as HTMLStyleElement | null;
+        if (!styleElement) {
+            styleElement = document.createElement("style");
+            styleElement.id = styleElementId;
+            styleElement.textContent = `
+                html {
+                    transition: margin-right 0.2s ease-in-out;
+                    margin-right: 220px !important;
+                    box-sizing: border-box;
+                }
+            `;
+            document.head.appendChild(styleElement);
+        }
 
+        // 2. Create (or reuse) the panel container
         const container = document.createElement("div");
         container.id = "surf-wallet-debug-panel";
+        container.style.position = "fixed";
+        container.style.top = "0";
+        container.style.right = "0";
+        container.style.width = "220px";
+        container.style.height = "100vh";
+        container.style.zIndex = "10000";
         container.style.pointerEvents = "auto";
         container.style.fontFamily = "Open Runde, Monaco, Menlo, Ubuntu Mono, monospace";
+        container.style.background = "transparent";
 
-        body.style.display = "flex";
-        body.style.flexDirection = "row";
-        body.style.minHeight = "100vh";
-        body.style.margin = "0";
-        body.style.padding = "0";
-
-        body.appendChild(mainContent);
         body.appendChild(container);
 
         const root = createRoot(container);
         root.render(<WalletDebugPanel />);
 
         (window as any).__debugPanelCleanup = () => {
-            body.style.display = originalBodyDisplay;
-            body.style.flexDirection = originalBodyFlexDirection;
+            // Restore original margin
+            body.style.marginRight = originalMarginRight;
 
-            const mainContentChildren = Array.from(mainContent.children);
-            mainContentChildren.forEach(child => {
-                body.appendChild(child);
-            });
-
-            if (mainContent.parentNode) {
-                mainContent.parentNode.removeChild(mainContent);
+            // Remove injected style tag
+            if (styleElement && styleElement.parentNode) {
+                styleElement.parentNode.removeChild(styleElement);
             }
+
+            // Remove the React root & container
+            root.unmount();
             if (container.parentNode) {
                 container.parentNode.removeChild(container);
             }
